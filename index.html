@@ -1354,6 +1354,92 @@ function initData(){
 }
 try{ initData(); }catch(e){ /* no debe bloquear el arranque */ }
 
+/* =========================================================
+   ACTUALIZACIÓN DE CATÁLOGO — nuevos servicios (Instagram + YouTube)
+   Reutiliza el sistema de "créditos por cada 1,000" que ya existe
+   en la app (cat.creditsPerK + calcularPrecioServicio) — NO crea
+   ninguna lógica de precios paralela.
+   Es aditiva e idempotente: se ejecuta en cada carga, pero solo
+   agrega la plataforma/categoría/producto si todavía no existe
+   (los busca por nombre). Nunca modifica ni elimina nada que ya
+   esté en el catálogo, así que es segura para un catálogo en
+   producción con datos reales guardados en localStorage.
+   ========================================================= */
+/* Crea los productos de una categoría automática: uno por cada cantidad
+   en qtyList. No llevan precio ni créditos manuales — la categoría ya
+   tiene creditsPerK configurado, así que el precio se calcula solo
+   según la cantidad (igual que cualquier otro producto "automático"). */
+function mkAutoProducts(serviceLabel, qtyList){
+  return qtyList.map(qty => ({
+    id: uid("PRD"),
+    name: qty.toLocaleString("es-CU") + " " + serviceLabel.toLowerCase(),
+    qty, image: ""
+  }));
+}
+/* Agrega una categoría (con su créditos-por-1000) a una plataforma si no
+   existe todavía, y además agrega cualquier cantidad de qtyList que le
+   falte como producto (comparando por prod.qty) — así, si más adelante
+   se amplía la lista de cantidades, basta con volver a ejecutar esta
+   función y solo se crean las cantidades nuevas, sin duplicar las que
+   ya estaban ni tocar categorías antiguas que no pasen por aquí. */
+function ensureCategoryWithRate(plat, catName, ratePer1000, serviceLabel, qtyList){
+  let cat = plat.categories.find(c => c.name === catName);
+  if(!cat){
+    cat = { id: uid("CAT"), name: catName, creditsPerK: ratePer1000, products: [] };
+    plat.categories.push(cat);
+  }
+  const existingQtys = new Set(cat.products.map(p => parseFloat(p.qty)));
+  qtyList.forEach(qty => {
+    if(!existingQtys.has(qty)) cat.products.push(mkAutoProducts(serviceLabel, [qty])[0]);
+  });
+  return cat;
+}
+/* Busca una plataforma por nombre o la crea si no existe todavía. */
+function ensurePlatformByName(platforms, platName, icon){
+  let plat = platforms.find(p => p.name === platName);
+  if(!plat){
+    plat = { id: uid("PLT"), name: platName, icon, categories: [] };
+    platforms.push(plat);
+  }
+  return plat;
+}
+function applyServiceCatalogUpdate_2026_08(){
+  const platforms = getLS(LS.platforms, []);
+  // Cantidades con las que queda cada nuevo servicio listo para vender.
+  // El admin puede agregar más cantidades luego desde "📦 Catálogo" sin
+  // tocar código: el precio se calcula solo a partir de creditsPerK.
+  const TIERS = [1000,2000,3000,4000,5000,10000,20000,30000,40000,50000,100000,200000,300000,400000,500000];
+
+  // Instagram ya existe en el catálogo: se reutiliza la misma plataforma.
+  const ig = platforms.find(p => p.name === "Instagram");
+  if(ig){
+    ensureCategoryWithRate(ig, "Publicaciones compartidas", 1.20, "Publicación compartida", TIERS);
+    ensureCategoryWithRate(ig, "Guardar", 0.20, "Guardados", TIERS);
+    ensureCategoryWithRate(ig, "Compartir", 0.08, "Compartidos", TIERS);
+  }
+
+  // YouTube es una plataforma nueva, creada con la misma arquitectura
+  // (plataforma → categorías → productos) que ya usa Instagram.
+  const yt = ensurePlatformByName(platforms, "YouTube", "▶️");
+  ensureCategoryWithRate(yt, "Suscriptores", 29, "Suscriptores", TIERS);
+  ensureCategoryWithRate(yt, "Me gusta", 5, "Me gusta", TIERS);
+  ensureCategoryWithRate(yt, "Visualizaciones", 3.55, "Visualizaciones", TIERS);
+  ensureCategoryWithRate(yt, "Espectadores en vivo", 2.20, "Espectadores en vivo", TIERS);
+  ensureCategoryWithRate(yt, "Reacciones en vivo", 1.20, "Reacciones en vivo", TIERS);
+  ensureCategoryWithRate(yt, "Comentarios en vivo", 78.60, "Comentarios en vivo", TIERS);
+  // "Comentarios" y "Me gusta en comentarios" tienen tarifas distintas
+  // (8 y 1.50). Como el sistema aplica un solo creditsPerK por categoría
+  // a todos sus productos, van en dos categorías separadas para que cada
+  // una calcule con su propia tarifa — si no, una de las dos quedaría con
+  // el precio equivocado.
+  ensureCategoryWithRate(yt, "Comentarios", 8, "Comentarios", TIERS);
+  ensureCategoryWithRate(yt, "Me gusta en comentarios", 1.50, "Me gusta en comentarios", TIERS);
+  ensureCategoryWithRate(yt, "Compartir", 6.20, "Compartir — 100 por día", TIERS);
+
+  setLS(LS.platforms, platforms);
+}
+try{ applyServiceCatalogUpdate_2026_08(); }catch(e){ /* no debe bloquear el arranque */ }
+
 /* ---------- Rayos decorativos de fondo ---------- */
 function spawnBolts(){
   const layer = document.getElementById('boltLayer'); layer.innerHTML = "";
