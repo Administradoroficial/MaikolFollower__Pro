@@ -2543,6 +2543,29 @@ function maybeShowWheelRevealOnEnter(){
    ========================================================= */
 function activePromos(){ return getLS(LS.promos, []).filter(p=>p.active); }
 
+/* Precio de una promoción tipo "combo" u "oferta con regalo" según el método de pago ('transfer' | 'saldo').
+   Compatibilidad: si la promoción es antigua y solo tiene un precio único (comboPrice), se usa ese valor
+   para ambos métodos hasta que el administrador la edite y establezca los dos precios por separado. */
+function getPromoPrice(promo, method){
+  if(promo.type==='combo'){
+    const hasNew = method==='saldo' ? (promo.comboPriceSaldo!==undefined && promo.comboPriceSaldo!=='' && !isNaN(promo.comboPriceSaldo)) : (promo.comboPriceTransfer!==undefined && promo.comboPriceTransfer!=='' && !isNaN(promo.comboPriceTransfer));
+    if(hasNew) return Number(method==='saldo' ? promo.comboPriceSaldo : promo.comboPriceTransfer);
+    return Number(promo.comboPrice)||0; // promoción antigua con precio único
+  }
+  if(promo.type==='gift'){
+    return Number(method==='saldo' ? promo.giftPriceSaldo : promo.giftPriceTransfer)||0;
+  }
+  return 0;
+}
+/* Filas de precio por método de pago para el detalle público de combo/gift, reutilizando el estilo visual existente */
+function promoDualPriceRowsHtml(p){
+  const t = getPromoPrice(p,'transfer'), s = getPromoPrice(p,'saldo');
+  const rows = [];
+  if(t) rows.push(`<div class="dual-price-row"><span class="dpr-label">💳 Transferencia</span><span class="price-compare"><b>${fmtCUP(t)}</b></span></div>`);
+  if(s) rows.push(`<div class="dual-price-row"><span class="dpr-label">📱 Saldo Móvil</span><span class="price-compare"><b>${fmtCUP(s)}</b></span></div>`);
+  return rows.join('');
+}
+
 function promoTypeLabel(type){
   return { discount:'Precio rebajado', combo:'Combo', gift:'Regalo', percent:'Descuento %', other:'Promoción' }[type] || 'Promoción';
 }
@@ -2557,8 +2580,14 @@ function promoTeaserPrice(p){
     return `${first.before?`<s>${fmtCUP(first.before)}</s>`:''} <b>${fmtCUP(first.after)}</b>`;
   }
   if(p.type==='percent') return `<b>${p.percentValue}% OFF</b>`;
-  if(p.type==='combo') return `<b>${fmtCUP(p.comboPrice)}</b>`;
-  if(p.type==='gift') return `<b>🎁 Regalo incluido</b>`;
+  if(p.type==='combo' || p.type==='gift'){
+    const t = getPromoPrice(p,'transfer'), s = getPromoPrice(p,'saldo');
+    const parts = [];
+    if(t) parts.push(`💳 <b>${fmtCUP(t)}</b>`);
+    if(s) parts.push(`📱 <b>${fmtCUP(s)}</b>`);
+    if(!parts.length) return p.type==='gift' ? `<b>🎁 Regalo incluido</b>` : '';
+    return parts.join(' &nbsp;·&nbsp; ');
+  }
   return '';
 }
 /* Una promoción se puede "comprar directo" cuando su alcance son productos específicos concretos */
@@ -2654,9 +2683,9 @@ function openPromoDetail(id){
     body += productPromoListHtml(p);
   } else if(p.type==='combo'){
     const items = (p.comboItems||'').split('\n').filter(Boolean);
-    body = `<ul class="combo-list">${items.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul><div class="price-compare"><b>${fmtCUP(p.comboPrice)}</b></div>`;
+    body = `<ul class="combo-list">${items.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` + promoDualPriceRowsHtml(p);
   } else if(p.type==='gift'){
-    body = `<div class="gift-box"><div class="gi">🎁</div><div><b>${escapeHtml(p.giftCondition||'')}</b><br><span style="color:var(--text-dim);font-size:.85rem;">Regalo: ${escapeHtml(p.giftReward||'')}</span></div></div>`;
+    body = `<div class="gift-box"><div class="gi">🎁</div><div><b>${escapeHtml(p.giftCondition||'')}</b><br><span style="color:var(--text-dim);font-size:.85rem;">Regalo: ${escapeHtml(p.giftReward||'')}</span></div></div>` + promoDualPriceRowsHtml(p);
   } else if(p.type==='percent'){
     const base = p.percentBase;
     const finalPrice = base ? Math.round(base * (1 - p.percentValue/100)) : null;
@@ -3918,12 +3947,23 @@ function promoTypeFieldsHtml(type, p){
     <p style="color:var(--text-dim);font-size:.72rem;margin:10px 0 12px;">El "precio ahora" de cada método se aplica exactamente así a cada producto incluido — sin cálculos ni proporciones.</p>`;
   }
   if(type==='combo'){
+    const ct = (p.comboPriceTransfer!==undefined && p.comboPriceTransfer!=='') ? p.comboPriceTransfer : (p.comboPrice!==undefined ? p.comboPrice : '');
+    const cs = (p.comboPriceSaldo!==undefined && p.comboPriceSaldo!=='') ? p.comboPriceSaldo : (p.comboPrice!==undefined ? p.comboPrice : '');
     return `<div class="field"><label>Servicios incluidos (uno por línea)</label><textarea id="pfComboItems" placeholder="100 seguidores&#10;200 vistas&#10;500 likes">${escapeHtml(p.comboItems||'')}</textarea></div>
-    <div class="field"><label>Precio del combo (CUP)</label><input id="pfComboPrice" type="number" value="${p.comboPrice||''}"></div>`;
+    <p style="color:var(--text-dim);font-size:.78rem;margin-bottom:10px;">Precio del combo para <b>cada método de pago</b>.</p>
+    <div class="row2">
+      <div class="field"><label>💳 Transferencia (CUP)</label><input id="pfComboPriceTransfer" type="number" min="0" step="any" inputmode="decimal" value="${ct}"></div>
+      <div class="field"><label>📱 Saldo Móvil (CUP)</label><input id="pfComboPriceSaldo" type="number" min="0" step="any" inputmode="decimal" value="${cs}"></div>
+    </div>`;
   }
   if(type==='gift'){
     return `<div class="field"><label>Condición de compra</label><input id="pfGiftCondition" placeholder="Ej: Compra la oferta de 500 seguidores" value="${escapeHtml(p.giftCondition||'')}"></div>
-    <div class="field"><label>Regalo otorgado</label><input id="pfGiftReward" placeholder="Ej: 100 likes gratis" value="${escapeHtml(p.giftReward||'')}"></div>`;
+    <div class="field"><label>Regalo otorgado</label><input id="pfGiftReward" placeholder="Ej: 100 likes gratis" value="${escapeHtml(p.giftReward||'')}"></div>
+    <p style="color:var(--text-dim);font-size:.78rem;margin-bottom:10px;">Precio de la oferta para <b>cada método de pago</b>.</p>
+    <div class="row2">
+      <div class="field"><label>💳 Transferencia (CUP)</label><input id="pfGiftPriceTransfer" type="number" min="0" step="any" inputmode="decimal" value="${p.giftPriceTransfer!==undefined?p.giftPriceTransfer:''}"></div>
+      <div class="field"><label>📱 Saldo Móvil (CUP)</label><input id="pfGiftPriceSaldo" type="number" min="0" step="any" inputmode="decimal" value="${p.giftPriceSaldo!==undefined?p.giftPriceSaldo:''}"></div>
+    </div>`;
   }
   if(type==='percent'){
     return `<div class="row2">
@@ -4121,10 +4161,20 @@ function savePromoForm(editId){
     if(scopeData.scope==='platform' && !scopeData.platformId){ showFloatAlert("Selecciona una plataforma."); return; }
   } else if(type==='combo'){
     promo.comboItems = document.getElementById('pfComboItems').value.trim();
-    promo.comboPrice = parseFloat(document.getElementById('pfComboPrice').value)||0;
+    const ct = parseFloat(document.getElementById('pfComboPriceTransfer').value);
+    const cs = parseFloat(document.getElementById('pfComboPriceSaldo').value);
+    if(isNaN(ct) || ct<0 || isNaN(cs) || cs<0){ showFloatAlert("Escribe precios válidos (números, no negativos) para Transferencia y Saldo Móvil."); return; }
+    promo.comboPriceTransfer = ct;
+    promo.comboPriceSaldo = cs;
+    promo.comboPrice = ct; // se mantiene por compatibilidad con cualquier referencia antigua al precio único
   } else if(type==='gift'){
     promo.giftCondition = document.getElementById('pfGiftCondition').value.trim();
     promo.giftReward = document.getElementById('pfGiftReward').value.trim();
+    const gt = parseFloat(document.getElementById('pfGiftPriceTransfer').value);
+    const gs = parseFloat(document.getElementById('pfGiftPriceSaldo').value);
+    if(isNaN(gt) || gt<0 || isNaN(gs) || gs<0){ showFloatAlert("Escribe precios válidos (números, no negativos) para Transferencia y Saldo Móvil."); return; }
+    promo.giftPriceTransfer = gt;
+    promo.giftPriceSaldo = gs;
   }
   if(!editId) promos.push(promo);
   setLS(LS.promos, promos);
