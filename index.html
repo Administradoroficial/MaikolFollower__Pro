@@ -404,6 +404,17 @@ table{width:100%;border-collapse:collapse;font-size:.85rem;}
 th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
 th{color:var(--text-dim);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;}
 td.actions{display:flex;gap:6px;flex-wrap:wrap;}
+.table-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;position:relative;}
+.table-scroll table{min-width:860px;width:100%;}
+.table-scroll th,.table-scroll td{white-space:nowrap;}
+.table-scroll td.actions{flex-wrap:nowrap;}
+.table-scroll th.col-img,.table-scroll td.col-img{min-width:64px;width:64px;}
+.table-scroll th.col-actions,.table-scroll td.col-actions{
+  position:sticky;right:0;z-index:3;
+  background:#101a30;
+  box-shadow:-8px 0 12px -6px rgba(0,0,0,.55);
+}
+.table-scroll thead th.col-actions{background:#0c1526;z-index:4;}
 .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.68rem;font-weight:700;letter-spacing:.4px;}
 .pill.on{background:rgba(56,230,160,.15);color:var(--ok);}
 .pill.off{background:rgba(255,255,255,.06);color:var(--text-dim);}
@@ -3410,8 +3421,9 @@ function renderCatalogCategories(){
         </span>
       </h3>
       <div id="catEditForm-${cat.id}"></div>
+      <div class="table-scroll">
       <table>
-        <thead><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Etiqueta</th><th>Créditos</th><th>Transferencia</th><th>Saldo Móvil</th><th>Stock</th><th>Img</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Etiqueta</th><th>Créditos</th><th>Transferencia</th><th>Saldo Móvil</th><th>Stock</th><th class="col-img">Img</th><th class="col-actions">Acciones</th></tr></thead>
         <tbody>
           ${cat.products.map(p=>{
             const base = getBasePrice(p, cat);
@@ -3422,14 +3434,15 @@ function renderCatalogCategories(){
               <td class="mono">${creditsCell}</td>
               <td class="mono">${fmtCUP(base.transfer)}</td><td class="mono">${fmtCUP(base.saldo)}</td>
               <td><span class="pill ${p.stock===false?'off':'on'}">${p.stock===false?'Agotado':'Disponible'}</span></td>
-              <td>${p.image ? `<img class="img-prev" src="${p.image}">` : '—'}</td>
-              <td class="actions">
+              <td class="col-img">${p.image ? `<img class="img-prev" src="${p.image}">` : '—'}</td>
+              <td class="actions col-actions">
                 <button class="btn btn-ghost btn-sm" onclick="editProduct('${cat.id}','${p.id}')">Editar</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct('${cat.id}','${p.id}')">Eliminar</button>
               </td></tr>`;
           }).join('') || `<tr><td colspan="10">Sin productos.</td></tr>`}
         </tbody>
       </table>
+      </div>
       <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="openProductForm('${cat.id}')">+ Nuevo producto</button>
       <div id="prodForm-${cat.id}"></div>
     </div>`;
