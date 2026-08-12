@@ -1064,6 +1064,7 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
       <button class="admin-nav-btn" data-tab="general" onclick="setAdminTab('general')">⚙ General</button>
       <button class="admin-nav-btn" data-tab="catalogo" onclick="setAdminTab('catalogo')">📦 Catálogo</button>
       <button class="admin-nav-btn" data-tab="plataformas" onclick="setAdminTab('plataformas')">🌐 Plataformas</button>
+      <button class="admin-nav-btn" data-tab="imagenes" onclick="setAdminTab('imagenes')">🖼 Imágenes de productos</button>
       <button class="admin-nav-btn" data-tab="rifa" onclick="setAdminTab('rifa')">🎟 Anuncio / Rifa</button>
       <button class="admin-nav-btn" data-tab="promos" onclick="setAdminTab('promos')">🔥 Anuncio / Promociones</button>
       <button class="admin-nav-btn" data-tab="pedidos" onclick="setAdminTab('pedidos')">🧾 Pedidos</button>
@@ -2240,7 +2241,7 @@ function buildProductCard(plat, cat, prod){
     <span class="share-heart" title="Compartir">📤</span>
     ${outOfStock ? '<span class="stock-badge">AGOTADO</span>' : ''}
     ${tagBadge}
-    ${prod.image ? `<img class="cimg" src="${prod.image}">` : `<div class="cimg-placeholder">📈</div>`}
+    ${cat.image ? `<img class="cimg" src="${cat.image}">` : `<div class="cimg-placeholder">📈</div>`}
     <div class="cname">${escapeHtml(prod.name)}</div>
     <div style="font-size:.68rem;color:var(--text-dim);">${escapeHtml(plat.name)} · ${escapeHtml(cat.name)}</div>
     ${prod.deliveryTime ? `<span class="delivery-badge">⏱ ${escapeHtml(prod.deliveryTime)}</span>` : ''}
@@ -2400,7 +2401,7 @@ function openProductDetail(plat, cat, prod){
   const eff = computeEffectivePrice(prod);
   const base = getBasePrice(prod);
   const imgWrap = document.getElementById('pdDetailImgWrap');
-  imgWrap.innerHTML = prod.image ? `<img class="ov-img" src="${prod.image}">` : `<div class="cimg-placeholder" style="height:190px;border-radius:0;font-size:2.6rem;">📈</div>`;
+  imgWrap.innerHTML = cat.image ? `<img class="ov-img" src="${cat.image}">` : `<div class="cimg-placeholder" style="height:190px;border-radius:0;font-size:2.6rem;">📈</div>`;
   document.getElementById('pdDetailMeta').textContent = `${plat.name} · ${cat.name} · #${prod.id}`;
   document.getElementById('pdDetailName').textContent = prod.name;
   document.getElementById('pdDetailDesc').textContent = prod.desc || 'Servicio de alta calidad con entrega gradual y segura, pensado para hacer crecer tu cuenta de forma natural.';
@@ -3417,7 +3418,7 @@ function setAdminTab(tab){
   adminTab = tab;
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.getElementById('adminSide').classList.remove('open');
-  const map = { dashboard: renderAdminDashboard, general: renderAdminGeneral, catalogo: renderAdminCatalogo, plataformas: renderAdminPlataformas, rifa: renderAdminRifa, promos: renderAdminPromos, pedidos: renderAdminPedidos, referidos: renderAdminReferidos, contenido: renderAdminContenido, credenciales: renderAdminCredenciales };
+  const map = { dashboard: renderAdminDashboard, general: renderAdminGeneral, catalogo: renderAdminCatalogo, plataformas: renderAdminPlataformas, imagenes: renderAdminImagenes, rifa: renderAdminRifa, promos: renderAdminPromos, pedidos: renderAdminPedidos, referidos: renderAdminReferidos, contenido: renderAdminContenido, credenciales: renderAdminCredenciales };
   (map[tab]||renderAdminGeneral)();
 }
 /* Redimensiona y comprime cualquier foto subida antes de guardarla (evita llenar el almacenamiento local) */
@@ -4043,6 +4044,69 @@ function savePlatformEdit(id){
   renderAdminPlataformas();
 }
 
+/* --- Imágenes de productos ---
+   Una sola imagen por combinación Plataforma + Tipo de servicio (categoría).
+   Se guarda en cat.image (mismo campo que ya usa el catálogo) — así todos
+   los productos de esa categoría, incluidos los nuevos, la heredan
+   automáticamente y no hace falta duplicarla en cada producto. */
+function renderAdminImagenes(){
+  const platforms = getLS(LS.platforms, []);
+  const c = document.getElementById('adminContent');
+  if(!platforms.length){
+    c.innerHTML = `<h2>🖼 Imágenes de productos</h2><div class="admin-card mirror">Primero crea una plataforma en la sección "🌐 Plataformas".</div>`;
+    return;
+  }
+  const blocks = platforms.map(plat=>{
+    const catRows = plat.categories.length ? plat.categories.map(cat=>`
+      <div class="admin-card" style="background:rgba(0,217,255,.04);display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--panel-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${cat.image ? `<img src="${cat.image}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:1.4rem;">📷</span>`}
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-weight:700;">${escapeHtml(cat.name)}</div>
+          <div style="font-size:.75rem;color:var(--text-dim);">${cat.products.length} producto(s) usan esta imagen</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <label class="file-drop" for="imgCatInput-${cat.id}"><input type="file" id="imgCatInput-${cat.id}" accept="image/*">📷 ${cat.image?'Reemplazar':'Subir imagen'}</label>
+          ${cat.image?`<button class="btn btn-danger btn-sm" onclick="removeCategoryImage('${plat.id}','${cat.id}')">🗑 Quitar</button>`:''}
+        </div>
+      </div>`).join('') : `<div class="admin-card mirror">Esta plataforma todavía no tiene tipos de servicio (categorías). Créalos en "📦 Catálogo".</div>`;
+    return `
+    <div class="admin-card mirror">
+      <h3>${platformIconHtml(plat.icon,20)} ${escapeHtml(plat.name)}</h3>
+      ${catRows}
+    </div>`;
+  }).join('');
+  c.innerHTML = `
+    <h2>🖼 Imágenes de productos</h2>
+    <p style="color:var(--text-dim);font-size:.8rem;margin:-8px 0 16px;">Configura una imagen por cada combinación de Plataforma + Tipo de servicio. Todos los productos de esa combinación —incluidos los que agregues después— usan automáticamente esta imagen. Cambiarla aquí solo afecta a esta plataforma y este tipo de servicio; el resto del catálogo no se toca.</p>
+    ${blocks}`;
+  platforms.forEach(plat=> plat.categories.forEach(cat=>{
+    const inp = document.getElementById('imgCatInput-'+cat.id);
+    if(inp) inp.onchange = (e)=> fileToBase64(e.target, (b64)=>{ setCategoryImage(plat.id, cat.id, b64); });
+  }));
+}
+function setCategoryImage(platId, catId, b64){
+  const platforms = getLS(LS.platforms, []);
+  const plat = platforms.find(p=>p.id===platId);
+  const cat = plat && plat.categories.find(c=>c.id===catId);
+  if(!cat) return;
+  cat.image = b64;
+  setLS(LS.platforms, platforms);
+  showFloatAlert(`Imagen actualizada para "${cat.name}" — se aplicó a todos sus productos`, "ok");
+  renderAdminImagenes();
+}
+function removeCategoryImage(platId, catId){
+  const platforms = getLS(LS.platforms, []);
+  const plat = platforms.find(p=>p.id===platId);
+  const cat = plat && plat.categories.find(c=>c.id===catId);
+  if(!cat) return;
+  cat.image = "";
+  setLS(LS.platforms, platforms);
+  showFloatAlert("Imagen eliminada", "ok");
+  renderAdminImagenes();
+}
+
 /* --- Catálogo --- */
 let catalogState = { platformId:null, catId:null };
 function selectCatalogPlatform(id){ catalogState.platformId = id; catalogState.catId=null; renderAdminCatalogo(); }
@@ -4101,6 +4165,7 @@ function renderCatalogCategories(){
       <h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${cat.image?`<img src="${cat.image}" class="img-prev">`:''} ${escapeHtml(cat.name)} <span style="color:var(--text-dim);font-weight:400;font-size:.8rem;">(${cat.products.length} productos)</span> ${ratePill}</span>
         <span style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="setAdminTab('imagenes')">🖼 Imagen</button>
           <button class="btn btn-ghost btn-sm" onclick="openCategoryEditForm('${cat.id}')">Editar</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat.id}')">Eliminar categoría</button>
         </span>
@@ -4108,7 +4173,7 @@ function renderCatalogCategories(){
       <div id="catEditForm-${cat.id}"></div>
       <div class="table-scroll">
       <table>
-        <thead><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Etiqueta</th><th>Créditos</th><th>Transferencia</th><th>Saldo Móvil</th><th>Stock</th><th class="col-img">Img</th><th class="col-actions">Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Etiqueta</th><th>Créditos</th><th>Transferencia</th><th>Saldo Móvil</th><th>Stock</th><th class="col-actions">Acciones</th></tr></thead>
         <tbody>
           ${cat.products.map(p=>{
             const base = getBasePrice(p, cat);
@@ -4119,12 +4184,11 @@ function renderCatalogCategories(){
               <td class="mono">${creditsCell}</td>
               <td class="mono">${fmtCUP(base.transfer)}</td><td class="mono">${fmtCUP(base.saldo)}</td>
               <td><span class="pill ${p.stock===false?'off':'on'}">${p.stock===false?'Agotado':'Disponible'}</span></td>
-              <td class="col-img">${p.image ? `<img class="img-prev" src="${p.image}">` : '—'}</td>
               <td class="actions col-actions">
                 <button class="btn btn-ghost btn-sm" onclick="editProduct('${cat.id}','${p.id}')">Editar</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct('${cat.id}','${p.id}')">Eliminar</button>
               </td></tr>`;
-          }).join('') || `<tr><td colspan="10">Sin productos.</td></tr>`}
+          }).join('') || `<tr><td colspan="9">Sin productos.</td></tr>`}
         </tbody>
       </table>
       </div>
@@ -4213,10 +4277,10 @@ function openProductForm(catId, editProdId){
         <div class="field"><label>Precio Saldo Móvil (CUP)</label><input id="pfSaldo" type="number" value="${editing?editing.priceSaldo:''}"></div>
       </div>
       <div class="field"><label>Imagen del producto</label>
-        <label class="file-drop" for="pfImgInput">
-          <input type="file" id="pfImgInput" accept="image/*">📷 ${editing&&editing.image ? 'Cambiar imagen (desde galería)' : 'Toca para elegir desde la galería'}
-        </label>
-        ${editing&&editing.image ? `<img src="${editing.image}" class="img-prev" style="margin-top:8px;">` : ''}
+        <div style="display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-dim);">
+          ${cat.image ? `<img src="${cat.image}" class="img-prev">` : ''}
+          <span>La imagen se toma automáticamente de "${escapeHtml(cat.name)}" en 🖼 Imágenes de productos — se aplica a todos los productos de esta categoría.</span>
+        </div>
       </div>
       <div class="field"><label>Descripción (opcional, se muestra en el detalle del producto)</label><textarea id="pfDesc" placeholder="Ej: Entrega gradual y segura, 100% cuentas reales.">${editing?escapeHtml(editing.desc||''):''}</textarea></div>
       <div class="field"><label>Tiempo de entrega estimado (opcional)</label><input id="pfDelivery" placeholder="Ej: 0-24 horas" value="${editing?escapeHtml(editing.deliveryTime||''):''}"></div>
@@ -4231,10 +4295,8 @@ function openProductForm(catId, editProdId){
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('prodForm-${catId}').innerHTML=''">Cancelar</button>
       </div>
     </div>`;
-  window.__pendingProdImg = editing ? (editing.image||"") : "";
   window.__pfAutoMode = autoMode;
   window.__pfCategoryRate = rate;
-  document.getElementById('pfImgInput').onchange = (e)=> fileToBase64(e.target, (b64)=>{ window.__pendingProdImg = b64; });
   updateCreditPreview();
 }
 /* Vista previa en vivo: recalcula el precio en pantalla mientras el admin escribe la cantidad
@@ -4291,9 +4353,8 @@ function saveProduct(catId, prodId){
   if(prodId){
     const prod = cat.products.find(p=>p.id===prodId);
     prod.name=name; prod.priceTransfer=transfer; prod.priceSaldo=saldo; prod.credits=credits; prod.qty=qty; prod.tag=tag; prod.stock=stock; prod.desc=desc; prod.deliveryTime=deliveryTime;
-    if(window.__pendingProdImg) prod.image = window.__pendingProdImg;
   } else {
-    cat.products.push({ id: uid("PRD"), name, priceTransfer:transfer, priceSaldo:saldo, credits, qty, image: window.__pendingProdImg||"", tag, stock, desc, deliveryTime });
+    cat.products.push({ id: uid("PRD"), name, priceTransfer:transfer, priceSaldo:saldo, credits, qty, tag, stock, desc, deliveryTime });
   }
   setLS(LS.platforms, platforms); showFloatAlert("Producto guardado", "ok"); renderAdminCatalogo();
 }
