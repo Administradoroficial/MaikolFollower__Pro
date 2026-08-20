@@ -368,6 +368,8 @@ h1,h2,h3,.brand,.stat-num{font-family:ui-sans-serif,-apple-system,'Segoe UI',Rob
   background:linear-gradient(135deg, rgba(0,217,255,.12), rgba(255,204,51,.10));
 }
 .card .cname{font-family:ui-sans-serif,-apple-system,'Segoe UI',Roboto,sans-serif,sans-serif;font-weight:700;font-size:1.1rem;cursor:pointer;}
+.updated-tag{font-size:.65rem;color:var(--text-dim);opacity:.85;}
+.cat-updated-note{font-size:.72rem;color:var(--text-dim);margin:-6px 0 12px;opacity:.85;}
 .card .cprices{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--text-dim);}
 .card .cprices b{color:var(--gold-2);font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;}
 .card .cbuy{margin-top:auto;}
@@ -767,6 +769,7 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
       <div class="platform-tabs-row"><div class="platform-tabs" id="platformTabs"></div><button class="btn btn-ghost btn-sm platform-share-btn" onclick="shareCurrentPlatform()" title="Compartir esta plataforma">🔗</button></div>
       <div class="cat-tabs" id="catTabs"></div>
     </div>
+    <div id="catUpdatedNote" class="cat-updated-note"></div>
     <div class="grid" id="productGrid"></div>
 
     <div id="testimonialsWrap"></div>
@@ -986,9 +989,11 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
     <div class="ov-body">
       <div class="ov-tag" id="pdDetailMeta"></div>
       <div class="ov-title" id="pdDetailName"></div>
+      <div id="pdDetailUpdated" class="updated-tag" style="margin:2px 0 6px;"></div>
       <div class="ov-desc" id="pdDetailDesc"></div>
       <div id="pdDetailPrices" style="margin:14px 0;"></div>
       <button class="btn btn-primary btn-block" id="pdDetailBuyBtn">🛒 Agregar al carrito</button>
+      <div id="pdDetailReviews"></div>
     </div>
   </div>
 </div>
@@ -1153,6 +1158,20 @@ function uid(prefix){ return prefix + "-" + Math.random().toString(36).slice(2,7
 function fmtCUP(n){ return "$" + Number(n).toLocaleString("es-CU") + " CUP"; }
 function nowStr(){ const d = new Date(); return d.toLocaleDateString("es-CU") + " " + d.toLocaleTimeString("es-CU", {hour:'2-digit', minute:'2-digit'}); }
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+/* Fecha corta tipo "19 ago", usada para mostrar cuándo se actualizó un producto o categoría */
+function formatShortDate(ts){
+  if(!ts) return '';
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const d = new Date(ts);
+  if(isNaN(d.getTime())) return '';
+  return d.getDate() + ' ' + meses[d.getMonth()];
+}
+/* Fecha de actualización más reciente de una categoría: la propia categoría o cualquiera de sus productos */
+function getCategoryLatestUpdate(cat){
+  let max = cat.updatedAt || 0;
+  (cat.products||[]).forEach(p=>{ if(p.updatedAt && p.updatedAt>max) max = p.updatedAt; });
+  return max;
+}
 
 /* =========================================================
    NUEVO: Sistema de Referidos con Comisiones
@@ -1913,7 +1932,20 @@ function enterApp(){
   maybeShowAnnouncementPopups();
   setTimeout(maybeShowWheelRevealOnEnter, 500);
 }
-function enterAdmin(){ applyBranding(); showScreen('adminScreen'); setAdminTab('dashboard'); }
+let __storageWarnShown = false;
+/* Aviso SOLO para el admin (nunca al cliente) de que el almacenamiento del navegador va quedando lleno,
+   para que reduzca el tamaño de las fotos antes de que algo falle al guardar */
+function checkStorageWarning(){
+  if(__storageWarnShown) return;
+  try{
+    const info = estimateStorageUsage();
+    if(info.pct>=75){
+      __storageWarnShown = true;
+      showFloatAlert("⚠ El almacenamiento va quedando lleno ("+info.pct+"%). Evita subir fotos muy pesadas o podrías perder cambios nuevos — revisa 💾 en el Resumen general.", "");
+    }
+  }catch(e){}
+}
+function enterAdmin(){ applyBranding(); showScreen('adminScreen'); setAdminTab('dashboard'); setTimeout(checkStorageWarning, 600); }
 
 /* ---------- Galería antes / después ---------- */
 function renderGallery(){
@@ -2252,6 +2284,7 @@ function buildProductCard(plat, cat, prod){
     ${outOfStock ? '<span class="stock-badge">AGOTADO</span>' : ''}
     ${tagBadge}
     ${cat.image ? `<img class="cimg" src="${cat.image}">` : `<div class="cimg-placeholder">📈</div>`}
+    ${prod.updatedAt ? `<div class="updated-tag">🕓 Actualizado: ${formatShortDate(prod.updatedAt)}</div>` : ''}
     <div class="cname">${escapeHtml(prod.name)}</div>
     <div style="font-size:.68rem;color:var(--text-dim);">${escapeHtml(plat.name)} · ${escapeHtml(cat.name)}</div>
     ${prod.deliveryTime ? `<span class="delivery-badge">⏱ ${escapeHtml(prod.deliveryTime)}</span>` : ''}
@@ -2307,8 +2340,13 @@ function renderProductGrid(){
   const platforms = getLS(LS.platforms, []);
   const plat = platforms.find(p=>p.id===state.platformId);
   const grid = document.getElementById('productGrid'); grid.innerHTML = "";
-  if(!plat){ return; }
+  const noteEl = document.getElementById('catUpdatedNote');
+  if(!plat){ if(noteEl) noteEl.textContent = ''; return; }
   const cat = plat.categories.find(c=>c.id===state.catId);
+  if(noteEl){
+    const latest = cat ? getCategoryLatestUpdate(cat) : 0;
+    noteEl.textContent = latest ? `🕓 Actualizado: ${formatShortDate(latest)}` : '';
+  }
   if(!cat || !cat.products.length){ grid.innerHTML = '<div class="empty-note">No hay productos en esta categoría todavía.</div>'; return; }
   const mode = document.getElementById('sortSelect') ? document.getElementById('sortSelect').value : '';
   let list = cat.products.map(prod=>({plat,cat,prod}));
@@ -2321,8 +2359,10 @@ function handleCatalogSearch(){
   const q = document.getElementById('catalogSearchInput').value.trim().toLowerCase();
   const tabsWrap = document.getElementById('browseTabsWrap');
   const grid = document.getElementById('productGrid');
+  const noteEl = document.getElementById('catUpdatedNote');
   if(!q){ tabsWrap.classList.remove('hidden'); renderProductGrid(); return; }
   tabsWrap.classList.add('hidden');
+  if(noteEl) noteEl.textContent = '';
   const platforms = getLS(LS.platforms, []);
   let matches = [];
   platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
@@ -2414,6 +2454,8 @@ function openProductDetail(plat, cat, prod){
   imgWrap.innerHTML = cat.image ? `<img class="ov-img" src="${cat.image}">` : `<div class="cimg-placeholder" style="height:190px;border-radius:0;font-size:2.6rem;">📈</div>`;
   document.getElementById('pdDetailMeta').textContent = `${plat.name} · ${cat.name} · #${prod.id}`;
   document.getElementById('pdDetailName').textContent = prod.name;
+  const updatedEl = document.getElementById('pdDetailUpdated');
+  if(updatedEl) updatedEl.textContent = prod.updatedAt ? `🕓 Actualizado: ${formatShortDate(prod.updatedAt)}` : '';
   document.getElementById('pdDetailDesc').textContent = prod.desc || 'Servicio de alta calidad con entrega gradual y segura, pensado para hacer crecer tu cuenta de forma natural.';
   const detailMetaExtra = document.getElementById('pdDetailMeta');
   if(prod.deliveryTime) detailMetaExtra.innerHTML += ` <span class="delivery-badge">⏱ ${escapeHtml(prod.deliveryTime)}</span>`;
@@ -2429,9 +2471,27 @@ function openProductDetail(plat, cat, prod){
   btn.disabled = outOfStock;
   btn.textContent = outOfStock ? 'Agotado' : '🛒 Agregar al carrito';
   btn.onclick = ()=>{ addToCartAndFeedback(plat, cat, prod); closeProductDetail(); };
+  renderProductReviews(prod.id);
   document.getElementById('productDetailOverlay').classList.remove('hidden');
 }
 function closeProductDetail(){ document.getElementById('productDetailOverlay').classList.add('hidden'); }
+/* Reseñas vinculadas a un producto específico (subconjunto de los testimonios generales) */
+function renderProductReviews(prodId){
+  const wrap = document.getElementById('pdDetailReviews');
+  if(!wrap) return;
+  const list = getLS(LS.testimonials, []).filter(t=>t.productId===prodId);
+  if(!list.length){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="section-label" style="margin-top:18px;">💬 Reseñas de este producto<span class="sl-line"></span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${list.map(t=>`
+        <div class="testimonial-card mirror" style="min-width:0;">
+          <div class="tc-stars">${'★'.repeat(t.rating)}${'☆'.repeat(5-t.rating)}</div>
+          <div class="tc-comment">${escapeHtml(t.comment)}</div>
+          <div class="tc-name">${escapeHtml(t.name)}${t.verified?' ✅':''}</div>
+        </div>`).join('')}
+    </div>`;
+}
 
 /* ---------- Mi cuenta ---------- */
 function openAccountModal(){
@@ -3810,15 +3870,24 @@ function renderAdminContenido(){
     <div class="admin-card mirror">
       <h3>Testimonios de clientes</h3>
       <table>
-        <thead><tr><th>Cliente</th><th>Estrellas</th><th>Comentario</th><th>✅</th><th>Acciones</th></tr></thead>
-        <tbody>${testimonials.map(t=>`
-          <tr><td>${escapeHtml(t.name)}</td><td>${'★'.repeat(t.rating)}</td><td style="max-width:220px;">${escapeHtml(t.comment)}</td><td>${t.verified?'✅':'—'}</td>
-          <td class="actions"><button class="btn btn-danger btn-sm" onclick="deleteTestimonial('${t.id}')">Eliminar</button></td></tr>`).join('') || '<tr><td colspan="5">Sin testimonios aún.</td></tr>'}</tbody>
+        <thead><tr><th>Cliente</th><th>Estrellas</th><th>Comentario</th><th>Producto</th><th>✅</th><th>Acciones</th></tr></thead>
+        <tbody>${testimonials.map(t=>{
+          const loc = t.productId ? locateProduct(t.productId) : null;
+          const prodLabel = t.productId ? (loc ? escapeHtml(loc.prod.name) : '<span style="color:var(--text-dim);">(producto eliminado)</span>') : '<span style="color:var(--text-dim);">General</span>';
+          return `<tr><td>${escapeHtml(t.name)}</td><td>${'★'.repeat(t.rating)}</td><td style="max-width:220px;">${escapeHtml(t.comment)}</td><td style="max-width:160px;">${prodLabel}</td><td>${t.verified?'✅':'—'}</td>
+          <td class="actions"><button class="btn btn-danger btn-sm" onclick="deleteTestimonial('${t.id}')">Eliminar</button></td></tr>`;
+        }).join('') || '<tr><td colspan="6">Sin testimonios aún.</td></tr>'}</tbody>
       </table>
       <div class="row3" style="margin-top:14px;">
         <div class="field"><label>Nombre del cliente</label><input id="newTstName" placeholder="Ej: Yosvani P."></div>
         <div class="field"><label>Estrellas (1-5)</label><input id="newTstRating" type="number" min="1" max="5" value="5"></div>
         <div class="field"><label>Comentario</label><input id="newTstComment" placeholder="Excelente servicio..."></div>
+      </div>
+      <div class="field" style="margin-top:6px;"><label>Vincular a un producto (opcional — se muestra debajo de ese producto)</label>
+        <select id="newTstProduct">
+          <option value="">General (no vinculado a un producto)</option>
+          ${getAllProductOptions().map(o=>`<option value="${o.id}">${escapeHtml(o.label)}</option>`).join('')}
+        </select>
       </div>
       <label class="check-row" style="margin:8px 0;"><input type="checkbox" id="newTstVerified"> Cliente verificado por WhatsApp (confirmaste el pedido con él)</label>
       <button class="btn btn-gold btn-sm" onclick="addTestimonial()">+ Agregar testimonio</button>
@@ -3912,14 +3981,25 @@ function deleteActivityItem(id){
   setLS(LS.activity, getLS(LS.activity, []).filter(a=>a.id!==id));
   renderAdminContenido();
 }
+/* Lista de todos los productos del catálogo, para el selector de "vincular reseña a un producto" */
+function getAllProductOptions(){
+  const platforms = getLS(LS.platforms, []);
+  const opts = [];
+  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+    opts.push({ id: prod.id, label: `${plat.name} · ${cat.name} · ${prod.name}` });
+  })));
+  return opts;
+}
 function addTestimonial(){
   const name = document.getElementById('newTstName').value.trim();
   const rating = Math.min(5, Math.max(1, parseInt(document.getElementById('newTstRating').value)||5));
   const comment = document.getElementById('newTstComment').value.trim();
   const verified = document.getElementById('newTstVerified').checked;
+  const prodSel = document.getElementById('newTstProduct');
+  const productId = prodSel ? prodSel.value : '';
   if(!name || !comment){ showFloatAlert("Completa el nombre y el comentario."); return; }
   const list = getLS(LS.testimonials, []);
-  list.push({ id: uid("TST"), name, rating, comment, verified, createdAt: nowStr() });
+  list.push({ id: uid("TST"), name, rating, comment, verified, productId, createdAt: nowStr() });
   setLS(LS.testimonials, list);
   showFloatAlert("Testimonio agregado", "ok");
   renderAdminContenido();
@@ -4196,6 +4276,7 @@ function renderCatalogCategories(){
               <td><span class="pill ${p.stock===false?'off':'on'}">${p.stock===false?'Agotado':'Disponible'}</span></td>
               <td class="actions col-actions">
                 <button class="btn btn-ghost btn-sm" onclick="editProduct('${cat.id}','${p.id}')">Editar</button>
+                <button class="btn btn-ghost btn-sm" onclick="duplicateProduct('${cat.id}','${p.id}')">Duplicar</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct('${cat.id}','${p.id}')">Eliminar</button>
               </td></tr>`;
           }).join('') || `<tr><td colspan="9">Sin productos.</td></tr>`}
@@ -4212,7 +4293,7 @@ function addCategory(){
   if(!name){ showFloatAlert("Escribe el nombre de la categoría."); return; }
   const platforms = getLS(LS.platforms, []);
   const plat = platforms.find(p=>p.id===catalogState.platformId);
-  plat.categories.push({ id: uid("CAT"), name, image: window.__pendingNewCatImg||"", products: [] });
+  plat.categories.push({ id: uid("CAT"), name, image: window.__pendingNewCatImg||"", products: [], updatedAt: Date.now() });
   setLS(LS.platforms, platforms); showFloatAlert("Categoría agregada", "ok"); renderAdminCatalogo();
 }
 function deleteCategory(catId){
@@ -4252,21 +4333,22 @@ function saveCategoryEdit(catId){
   const cat = plat.categories.find(c=>c.id===catId);
   cat.name = name;
   if(window.__pendingCatEditImg) cat.image = window.__pendingCatEditImg;
+  cat.updatedAt = Date.now();
   setLS(LS.platforms, platforms);
   showFloatAlert("Categoría actualizada", "ok");
   renderAdminCatalogo();
 }
-function openProductForm(catId, editProdId){
+function openProductForm(catId, editProdId, duplicateData){
   const platforms = getLS(LS.platforms, []);
   const plat = platforms.find(p=>p.id===catalogState.platformId);
   const cat = plat.categories.find(c=>c.id===catId);
-  const editing = editProdId ? cat.products.find(p=>p.id===editProdId) : null;
+  const editing = editProdId ? cat.products.find(p=>p.id===editProdId) : (duplicateData || null);
   const rate = getCategoryCreditRate(cat);
   const autoMode = rate!==undefined;
   const box = document.getElementById('prodForm-'+catId);
   box.innerHTML = `
     <div class="admin-card" style="background:rgba(0,217,255,.04);margin-top:12px;">
-      <h3>${editing ? 'Editar producto' : 'Nuevo producto'}</h3>
+      <h3>${editProdId ? 'Editar producto' : (duplicateData ? 'Nuevo producto (duplicado)' : 'Nuevo producto')}</h3>
       <div class="field"><label>Nombre</label><input id="pfName" value="${editing?escapeHtml(editing.name):''}"></div>
 
       <div class="field"><label>🔢 Cantidad (unidades, ej: 1000, 5000, 10000)</label>
@@ -4341,6 +4423,20 @@ function updateCreditPreview(){
   if(saldoField){ saldoField.value = s; saldoField.disabled = true; }
 }
 function editProduct(catId, prodId){ openProductForm(catId, prodId); }
+/* Duplica un producto: abre el formulario de "nuevo producto" prellenado con los datos
+   del producto original (para ahorrar tiempo al agregar ofertas parecidas) */
+function duplicateProduct(catId, prodId){
+  const platforms = getLS(LS.platforms, []);
+  const plat = platforms.find(p=>p.id===catalogState.platformId);
+  const cat = plat.categories.find(c=>c.id===catId);
+  const prod = cat.products.find(p=>p.id===prodId);
+  if(!prod) return;
+  const dup = Object.assign({}, prod, { name: prod.name + " (copia)" });
+  openProductForm(catId, null, dup);
+  showFloatAlert("Producto duplicado — ajusta lo que necesites y guarda.", "ok");
+  const formEl = document.getElementById('prodForm-'+catId);
+  if(formEl) formEl.scrollIntoView({behavior:'smooth', block:'center'});
+}
 function saveProduct(catId, prodId){
   const name = document.getElementById('pfName').value.trim();
   const qtyRaw = document.getElementById('pfQty').value;
@@ -4362,9 +4458,9 @@ function saveProduct(catId, prodId){
   const cat = plat.categories.find(c=>c.id===catId);
   if(prodId){
     const prod = cat.products.find(p=>p.id===prodId);
-    prod.name=name; prod.priceTransfer=transfer; prod.priceSaldo=saldo; prod.credits=credits; prod.qty=qty; prod.tag=tag; prod.stock=stock; prod.desc=desc; prod.deliveryTime=deliveryTime;
+    prod.name=name; prod.priceTransfer=transfer; prod.priceSaldo=saldo; prod.credits=credits; prod.qty=qty; prod.tag=tag; prod.stock=stock; prod.desc=desc; prod.deliveryTime=deliveryTime; prod.updatedAt=Date.now();
   } else {
-    cat.products.push({ id: uid("PRD"), name, priceTransfer:transfer, priceSaldo:saldo, credits, qty, tag, stock, desc, deliveryTime });
+    cat.products.push({ id: uid("PRD"), name, priceTransfer:transfer, priceSaldo:saldo, credits, qty, tag, stock, desc, deliveryTime, updatedAt: Date.now() });
   }
   setLS(LS.platforms, platforms); showFloatAlert("Producto guardado", "ok"); renderAdminCatalogo();
 }
