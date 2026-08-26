@@ -1840,7 +1840,7 @@ function setServiceStatus(platformId, value){
 function allProductsFlat(){
   const platforms = getLS(LS.platforms, []);
   const out = [];
-  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+  platforms.forEach(plat=> plat.categories.filter(isCategoryActive).forEach(cat=> cat.products.forEach(prod=>{
     if(prod.stock!==false) out.push({plat,cat,prod});
   })));
   return out;
@@ -2035,13 +2035,19 @@ function renderPlatformTabs(){
   });
   renderCatTabs();
 }
+/* Una categoría se considera visible para los clientes salvo que el admin la haya desactivado
+   (cat.active === false). Si el campo no existe (categorías creadas antes de esta función),
+   se trata como activa por defecto, así no se rompe nada de lo ya guardado. */
+function isCategoryActive(cat){ return !!cat && cat.active !== false; }
 function renderCatTabs(){
   const platforms = getLS(LS.platforms, []);
   const plat = platforms.find(p=>p.id===state.platformId);
   const box = document.getElementById('catTabs'); box.innerHTML = "";
   if(!plat || !plat.categories.length){ box.innerHTML=''; renderProductGrid(); return; }
-  if(!state.catId || !plat.categories.some(c=>c.id===state.catId)) state.catId = plat.categories[0].id;
-  plat.categories.forEach(c=>{
+  const visibleCats = plat.categories.filter(isCategoryActive);
+  if(!visibleCats.length){ box.innerHTML=''; state.catId = null; renderProductGrid(); return; }
+  if(!state.catId || !visibleCats.some(c=>c.id===state.catId)) state.catId = visibleCats[0].id;
+  visibleCats.forEach(c=>{
     const b = document.createElement('button');
     b.textContent = c.name; b.className = c.id===state.catId ? 'active' : '';
     b.onclick = ()=>{ state.catId = c.id; renderCatTabs(); };
@@ -2107,7 +2113,7 @@ function resolveProductsByIds(ids){
   if(!ids || !ids.length) return [];
   const platforms = getLS(LS.platforms, []);
   const found = [];
-  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+  platforms.forEach(plat=> plat.categories.filter(isCategoryActive).forEach(cat=> cat.products.forEach(prod=>{
     if(ids.includes(prod.id)) found.push({plat,cat,prod});
   })));
   return found;
@@ -2342,7 +2348,8 @@ function renderProductGrid(){
   const grid = document.getElementById('productGrid'); grid.innerHTML = "";
   const noteEl = document.getElementById('catUpdatedNote');
   if(!plat){ if(noteEl) noteEl.textContent = ''; return; }
-  const cat = plat.categories.find(c=>c.id===state.catId);
+  let cat = plat.categories.find(c=>c.id===state.catId);
+  if(cat && !isCategoryActive(cat)) cat = null;
   if(noteEl){
     const latest = cat ? getCategoryLatestUpdate(cat) : 0;
     noteEl.textContent = latest ? `🕓 Actualizado: ${formatShortDate(latest)}` : '';
@@ -2365,7 +2372,7 @@ function handleCatalogSearch(){
   if(noteEl) noteEl.textContent = '';
   const platforms = getLS(LS.platforms, []);
   let matches = [];
-  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+  platforms.forEach(plat=> plat.categories.filter(isCategoryActive).forEach(cat=> cat.products.forEach(prod=>{
     if(prod.name.toLowerCase().includes(q)) matches.push({plat, cat, prod});
   })));
   const mode = document.getElementById('sortSelect') ? document.getElementById('sortSelect').value : '';
@@ -2381,7 +2388,7 @@ function renderFeaturedProducts(){
   const platforms = getLS(LS.platforms, []);
   const featured = [];
   const combos = [];
-  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+  platforms.forEach(plat=> plat.categories.filter(isCategoryActive).forEach(cat=> cat.products.forEach(prod=>{
     if(prod.stock===false) return;
     if(prod.tag==='Combo') combos.push({plat,cat,prod});
     else if(prod.tag && (prod.tag==='Más vendido' || prod.tag==='Promoción' || computeEffectivePrice(prod).promo)) featured.push({plat,cat,prod});
@@ -2437,7 +2444,7 @@ function openFavoritesModal(){
   const platforms = getLS(LS.platforms, []);
   const grid = document.getElementById('favoritesGrid'); grid.innerHTML = '';
   const found = [];
-  platforms.forEach(plat=> plat.categories.forEach(cat=> cat.products.forEach(prod=>{
+  platforms.forEach(plat=> plat.categories.filter(isCategoryActive).forEach(cat=> cat.products.forEach(prod=>{
     if(favs.includes(prod.id)) found.push({plat,cat,prod});
   })));
   if(!found.length){ grid.innerHTML = '<div class="empty-note">Aún no tienes productos favoritos. Toca el ♡ en cualquier producto.</div>'; }
@@ -4250,13 +4257,18 @@ function renderCatalogCategories(){
     const ratePill = rate!==undefined
       ? `<span class="pill on">⚡ ${rate} créditos/1,000</span>`
       : `<span class="pill off">Sin configurar créditos</span>`;
+    const active = isCategoryActive(cat);
+    const statusPill = active
+      ? `<span class="pill on">🟢 Visible para clientes</span>`
+      : `<span class="pill off">🚫 Oculta (desactivada)</span>`;
     return `
-    <div class="admin-card mirror">
+    <div class="admin-card mirror" ${active?'':'style="opacity:.65;"'}>
       <h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${cat.image?`<img src="${cat.image}" class="img-prev">`:''} ${escapeHtml(cat.name)} <span style="color:var(--text-dim);font-weight:400;font-size:.8rem;">(${cat.products.length} productos)</span> ${ratePill}</span>
-        <span style="display:flex;gap:8px;">
+        <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${cat.image?`<img src="${cat.image}" class="img-prev">`:''} ${escapeHtml(cat.name)} <span style="color:var(--text-dim);font-weight:400;font-size:.8rem;">(${cat.products.length} productos)</span> ${ratePill} ${statusPill}</span>
+        <span style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm" onclick="setAdminTab('imagenes')">🖼 Imagen</button>
           <button class="btn btn-ghost btn-sm" onclick="openCategoryEditForm('${cat.id}')">Editar</button>
+          <button class="btn ${active?'btn-ghost':'btn-primary'} btn-sm" onclick="toggleCategoryActive('${cat.id}')">${active?'🚫 Desactivar':'🟢 Activar'}</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat.id}')">Eliminar categoría</button>
         </span>
       </h3>
@@ -4293,8 +4305,23 @@ function addCategory(){
   if(!name){ showFloatAlert("Escribe el nombre de la categoría."); return; }
   const platforms = getLS(LS.platforms, []);
   const plat = platforms.find(p=>p.id===catalogState.platformId);
-  plat.categories.push({ id: uid("CAT"), name, image: window.__pendingNewCatImg||"", products: [], updatedAt: Date.now() });
+  plat.categories.push({ id: uid("CAT"), name, image: window.__pendingNewCatImg||"", products: [], active: true, updatedAt: Date.now() });
   setLS(LS.platforms, platforms); showFloatAlert("Categoría agregada", "ok"); renderAdminCatalogo();
+}
+/* Activa/desactiva una categoría sin borrarla ni tocar sus productos. Una categoría desactivada
+   deja de aparecer en el catálogo del cliente (pestañas, búsqueda, destacados, favoritos,
+   comparador y promociones), pero sigue intacta aquí en el panel para volver a activarla cuando
+   se quiera ofrecer de nuevo. */
+function toggleCategoryActive(catId){
+  const platforms = getLS(LS.platforms, []);
+  const plat = platforms.find(p=>p.id===catalogState.platformId);
+  const cat = plat.categories.find(c=>c.id===catId);
+  if(!cat) return;
+  cat.active = isCategoryActive(cat) ? false : true;
+  cat.updatedAt = Date.now();
+  setLS(LS.platforms, platforms);
+  showFloatAlert(cat.active ? "Categoría activada — ya es visible para los clientes" : "Categoría desactivada — ya no se muestra a los clientes", "ok");
+  renderCatalogCategories();
 }
 function deleteCategory(catId){
   if(!confirm("¿Eliminar esta categoría y sus productos?")) return;
