@@ -673,6 +673,53 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
 .ls-box{padding:22px;}
 .ls-box .ov-title{margin-top:0;}
 #lsLinkInput{width:100%;padding:11px 13px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;color:var(--gold-2);font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;font-size:.82rem;margin-bottom:14px;}
+
+/* ---- Oculta el catálogo antiguo de tarjetas (sigue funcionando por dentro, solo no se muestra) ---- */
+.legacy-hidden{display:none !important;}
+
+/* ---- Nuevo Pedido: formulario único que reemplaza el listado de ofertas ---- */
+.new-order-card{padding:20px;margin-bottom:28px;}
+@media(min-width:640px){ .new-order-card{padding:28px;} }
+.no-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:22px;}
+.no-icon{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 0 18px rgba(0,217,255,.3);}
+.no-header h2{font-size:1.2rem;margin:0 0 2px;}
+.no-header p{margin:0;color:var(--text-dim);font-size:.82rem;}
+.no-section{border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;background:rgba(255,255,255,.015);}
+.no-section-title{font-weight:700;color:var(--blue-2);font-size:.95rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.no-label{display:block;font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;margin-top:14px;}
+.no-label:first-child{margin-top:0;}
+.no-label .req{color:var(--danger);}
+.no-select{width:100%;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:.92rem;font-family:inherit;}
+.no-select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,217,255,.15);}
+.no-row{display:grid;grid-template-columns:1fr;gap:16px;margin-top:4px;}
+@media(min-width:760px){ .no-row{grid-template-columns:1fr 1fr;} }
+.no-qty-input-wrap{position:relative;}
+.no-qty-input{width:100%;padding:12px 78px 12px 13px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:1rem;font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;}
+.no-qty-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,217,255,.15);}
+.no-qty-unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--text-dim);background:rgba(255,255,255,.05);padding:4px 8px;border-radius:6px;}
+.no-minmax{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-dim);margin-top:6px;}
+.no-qty-warn{font-size:.72rem;color:var(--danger);margin-top:6px;}
+.no-price-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.no-price-card{border-radius:12px;padding:12px;text-align:center;border:1px solid var(--line);background:rgba(255,255,255,.02);}
+.no-price-card-head{font-size:.72rem;color:var(--text-dim);margin-bottom:6px;}
+.no-price-card-value{font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;font-weight:700;font-size:1.05rem;color:var(--gold-2);}
+.no-price-card-sub{font-size:.65rem;color:var(--text-dim);margin-top:2px;}
+.no-price-saldo{border-color:rgba(0,217,255,.35);}
+.no-price-transfer{border-color:rgba(255,204,51,.35);}
+.no-info-note{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:12px 14px;border-radius:10px;background:rgba(0,217,255,.06);border:1px solid rgba(0,217,255,.2);font-size:.8rem;color:var(--text-dim);}
+.no-info-note b{color:var(--blue-2);}
+.no-summary-row{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;padding:7px 0;border-bottom:1px dashed var(--line);color:var(--text-dim);}
+.no-summary-row:last-of-type{border-bottom:none;}
+.no-summary-row span:last-child{color:var(--text);font-weight:600;}
+.no-total-box{display:flex;justify-content:space-between;align-items:center;border-radius:12px;padding:14px 16px;margin-top:14px;border:1px solid var(--line);}
+.no-total-box b{font-size:.85rem;}
+.no-total-sub{font-size:.7rem;color:var(--text-dim);margin-top:2px;}
+.no-total-saldo{background:rgba(0,217,255,.06);border-color:rgba(0,217,255,.3);}
+.no-total-transfer{background:rgba(255,204,51,.06);border-color:rgba(255,204,51,.3);margin-bottom:0;}
+.no-total-value{font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;font-weight:700;font-size:1.15rem;color:var(--gold-2);}
+.no-desc-row{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--text-dim);margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+.no-desc-row span:last-child{cursor:pointer;color:var(--blue-2);}
+.no-submit-btn{width:100%;padding:16px;font-size:1rem;margin-top:6px;}
 </style>
 </head>
 
@@ -778,25 +825,110 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
     <div id="rifaWinnerWrap"></div>
     <div id="rifaFixedWrap"></div>
     <div id="promosFixedWrap"></div>
-    <div id="featuredWrap"></div>
 
-    <div class="search-sort-row">
-      <div class="search-bar"><span class="si">🔍</span><input id="catalogSearchInput" placeholder="Buscar producto en todo el catálogo..." oninput="handleCatalogSearch()"></div>
-      <select id="sortSelect" class="sort-select" onchange="handleSortChange()">
-        <option value="">Ordenar por…</option>
-        <option value="price_asc">Precio: menor a mayor</option>
-        <option value="price_desc">Precio: mayor a menor</option>
-        <option value="name_asc">Nombre: A–Z</option>
-      </select>
-      <button class="btn btn-ghost btn-sm" onclick="openCompareModal()">⚖ Comparar</button>
+    <!-- ===== Nuevo Pedido: formulario único que reemplaza el listado de
+         cientos de tarjetas por cantidad. Los productos/servicios originales
+         siguen existiendo tal cual en los datos (carrito, pedidos, créditos,
+         promociones y panel administrativo no se tocan); esto solo cambia
+         cómo el cliente los ve y compra. ===== -->
+    <div class="card mirror new-order-card">
+      <div class="no-header">
+        <div class="no-icon">🛒</div>
+        <div>
+          <h2>Nuevo Pedido</h2>
+          <p>Completa los datos para crear tu nuevo pedido</p>
+        </div>
+      </div>
+
+      <div class="no-section">
+        <div class="no-section-title">🧺 1. Información del pedido</div>
+
+        <label class="no-label">Plataformas <span class="req">*</span></label>
+        <select id="noPlatformSelect" class="no-select" onchange="onNoPlatformChange()"></select>
+
+        <label class="no-label">Seleccionar Categoría <span class="req">*</span></label>
+        <select id="noCategorySelect" class="no-select" onchange="onNoCategoryChange()"></select>
+
+        <div class="no-row">
+          <div>
+            <label class="no-label">Cantidad <span class="req">*</span></label>
+            <div class="no-qty-input-wrap">
+              <input type="number" id="noQtyInput" class="no-qty-input" inputmode="numeric" min="100" max="50000" step="1" value="100" oninput="onNoQtyChange()">
+              <span class="no-qty-unit">Unidades</span>
+            </div>
+            <div class="no-minmax"><span>Mínimo: 100</span><span>Máximo: 50,000</span></div>
+            <div id="noQtyWarn" class="no-qty-warn hidden">La cantidad debe estar entre 100 y 50,000.</div>
+          </div>
+          <div>
+            <label class="no-label">Precio por 1K (Ambos métodos)</label>
+            <div class="no-price-cards">
+              <div class="no-price-card no-price-saldo">
+                <div class="no-price-card-head">📱 Saldo Móvil</div>
+                <div class="no-price-card-value" id="noPerKSaldo">—</div>
+                <div class="no-price-card-sub">por cada 1,000</div>
+              </div>
+              <div class="no-price-card no-price-transfer">
+                <div class="no-price-card-head">🏦 Transferencia</div>
+                <div class="no-price-card-value" id="noPerKTransfer">—</div>
+                <div class="no-price-card-sub">por cada 1,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-info-note"><span>ℹ️</span><span>La cantidad mínima por pedido es <b>100</b> unidades y la máxima es <b>50,000</b> unidades.</span></div>
+      </div>
+
+      <div class="no-section">
+        <div class="no-section-title">📄 2. Resumen del pedido</div>
+        <div class="no-summary-row"><span>Servicio seleccionado:</span><span id="noSumService">—</span></div>
+        <div class="no-summary-row"><span>Plataforma:</span><span id="noSumPlatform">—</span></div>
+        <div class="no-summary-row"><span>Cantidad solicitada:</span><span id="noSumQty">—</span></div>
+        <div class="no-summary-row"><span>Cantidad mínima:</span><span>100</span></div>
+        <div class="no-summary-row"><span>Cantidad máxima:</span><span>50,000</span></div>
+
+        <div class="no-total-box no-total-saldo">
+          <div><b>Total con Saldo Móvil:</b><div class="no-total-sub" id="noRateSaldoSub">—</div></div>
+          <div class="no-total-value" id="noTotalSaldo">—</div>
+        </div>
+        <div class="no-total-box no-total-transfer">
+          <div><b>Total con Transferencia:</b><div class="no-total-sub" id="noRateTransferSub">—</div></div>
+          <div class="no-total-value" id="noTotalTransfer">—</div>
+        </div>
+
+        <div class="no-desc-row">
+          <span>Descripción:</span>
+          <span id="noDescDisplay" onclick="editNoDescription()">Sin descripción ✏️</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary no-submit-btn" id="noSubmitBtn" onclick="startCustomOrderCheckout()">🛍️ Realizar Pedido</button>
     </div>
 
-    <div id="browseTabsWrap">
-      <div class="platform-tabs-row"><div class="platform-tabs" id="platformTabs"></div><button class="btn btn-ghost btn-sm platform-share-btn" onclick="shareCurrentPlatform()" title="Compartir esta plataforma">🔗</button></div>
-      <div class="cat-tabs" id="catTabs"></div>
+    <!-- ===== Catálogo antiguo de tarjetas: se mantiene 100% funcional por
+         dentro (precios, stock, promos, favoritos, buscador…) pero oculto
+         visualmente, como pidió el dueño del catálogo. ===== -->
+    <div class="legacy-hidden">
+      <div id="featuredWrap"></div>
+
+      <div class="search-sort-row">
+        <div class="search-bar"><span class="si">🔍</span><input id="catalogSearchInput" placeholder="Buscar producto en todo el catálogo..." oninput="handleCatalogSearch()"></div>
+        <select id="sortSelect" class="sort-select" onchange="handleSortChange()">
+          <option value="">Ordenar por…</option>
+          <option value="price_asc">Precio: menor a mayor</option>
+          <option value="price_desc">Precio: mayor a menor</option>
+          <option value="name_asc">Nombre: A–Z</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="openCompareModal()">⚖ Comparar</button>
+      </div>
+
+      <div id="browseTabsWrap">
+        <div class="platform-tabs-row"><div class="platform-tabs" id="platformTabs"></div><button class="btn btn-ghost btn-sm platform-share-btn" onclick="shareCurrentPlatform()" title="Compartir esta plataforma">🔗</button></div>
+        <div class="cat-tabs" id="catTabs"></div>
+      </div>
+      <div id="catUpdatedNote" class="cat-updated-note"></div>
+      <div class="grid" id="productGrid"></div>
     </div>
-    <div id="catUpdatedNote" class="cat-updated-note"></div>
-    <div class="grid" id="productGrid"></div>
 
     <div id="testimonialsWrap"></div>
     <div id="galleryWrap"></div>
@@ -1948,6 +2080,7 @@ function enterApp(){
   renderRifaFixed();
   renderPromosFixed();
   renderPlatformTabs();
+  renderNewOrderForm();
   renderTestimonials();
   renderFaqs();
   renderServiceStatus();
@@ -2260,6 +2393,181 @@ function locateProduct(prodId){
     }
   }
   return null;
+}
+
+/* =========================================================================
+   NUEVO PEDIDO — formulario único de cantidad libre (100 a 50,000)
+   -------------------------------------------------------------------------
+   Reemplaza visualmente el listado de cientos de tarjetas de ofertas por
+   un único formulario "Plataforma → Categoría → Cantidad → Precios". No
+   crea ningún sistema de precios paralelo:
+     - Si la categoría tiene creditsPerK configurado, el precio para
+       cualquier cantidad se pide directamente a getBasePrice() — la misma
+       función que ya usa cada producto automático del catálogo.
+     - Si la categoría es antigua y no tiene creditsPerK (precios fijados a
+       mano por el admin en cada cantidad), se interpola entre esos mismos
+       precios ya guardados, sin inventar ningún número nuevo.
+   Al finalizar el pedido, se agrega como una línea especial ("custom") al
+   mismo carrito de siempre, así todo el flujo de pago, pedidos, comisiones
+   de referidos y mensaje de WhatsApp sigue siendo exactamente el mismo.
+   ========================================================================= */
+let noState = { platformId:null, catId:null, desc:'' };
+const NO_MIN_QTY = 100, NO_MAX_QTY = 50000;
+
+function noEligiblePlatforms(){
+  return getLS(LS.platforms, []).filter(p=> (p.categories||[]).some(isCategoryActive));
+}
+function noEligibleCategories(plat){
+  return plat ? (plat.categories||[]).filter(isCategoryActive) : [];
+}
+/* Precios ya guardados en una categoría (cantidad → precio), ordenados por
+   cantidad. Solo se usa como respaldo para categorías sin creditsPerK. */
+function noCategoryPricePoints(cat){
+  return (cat.products||[])
+    .filter(p=> p.stock!==false && parseFloat(p.qty)>0)
+    .map(p=>{ const b = getBasePrice(p, cat); return { qty: parseFloat(p.qty), transfer:b.transfer, saldo:b.saldo }; })
+    .sort((a,b)=>a.qty-b.qty);
+}
+function noInterpolate(points, key, qty){
+  if(!points.length) return 0;
+  if(points.length===1) return Math.round((points[0][key]/points[0].qty)*qty);
+  if(qty<=points[0].qty) return Math.round((points[0][key]/points[0].qty)*qty);
+  const last = points[points.length-1];
+  if(qty>=last.qty){
+    const prev = points[points.length-2];
+    const rate = (last[key]-prev[key])/(last.qty-prev.qty);
+    return Math.round(last[key] + rate*(qty-last.qty));
+  }
+  for(let i=0;i<points.length-1;i++){
+    const a=points[i], b=points[i+1];
+    if(qty>=a.qty && qty<=b.qty){
+      const ratio = (qty-a.qty)/(b.qty-a.qty);
+      return Math.round(a[key] + ratio*(b[key]-a[key]));
+    }
+  }
+  return 0;
+}
+/* Precio (Transferencia y Saldo Móvil) de una categoría para CUALQUIER
+   cantidad — reutilizando el sistema de precios actual, sin duplicar lógica. */
+function noPriceForQty(cat, qty){
+  if(getCategoryCreditRate(cat)!==undefined) return getBasePrice({ qty }, cat);
+  const pts = noCategoryPricePoints(cat);
+  return { transfer: noInterpolate(pts,'transfer',qty), saldo: noInterpolate(pts,'saldo',qty) };
+}
+function currentNoCategory(){
+  const plat = getLS(LS.platforms, []).find(p=>p.id===noState.platformId);
+  if(!plat) return null;
+  return (plat.categories||[]).find(c=>c.id===noState.catId) || null;
+}
+function renderNewOrderForm(){
+  const platSel = document.getElementById('noPlatformSelect');
+  if(!platSel) return;
+  const plats = noEligiblePlatforms();
+  const submitBtn = document.getElementById('noSubmitBtn');
+  if(!plats.length){
+    platSel.innerHTML = '<option value="">No hay plataformas disponibles</option>';
+    document.getElementById('noCategorySelect').innerHTML = '<option value="">—</option>';
+    if(submitBtn) submitBtn.disabled = true;
+    updateNoPricing();
+    return;
+  }
+  if(!noState.platformId || !plats.some(p=>p.id===noState.platformId)){ noState.platformId = plats[0].id; noState.catId = null; }
+  platSel.innerHTML = plats.map(p=>{
+    const iconPrefix = (p.icon && !p.icon.startsWith('data:')) ? escapeHtml(p.icon)+' ' : '';
+    return `<option value="${p.id}" ${p.id===noState.platformId?'selected':''}>${iconPrefix}${escapeHtml(p.name)}</option>`;
+  }).join('');
+  renderNoCategories();
+}
+function renderNoCategories(){
+  const plat = getLS(LS.platforms, []).find(p=>p.id===noState.platformId);
+  const catSel = document.getElementById('noCategorySelect');
+  const submitBtn = document.getElementById('noSubmitBtn');
+  const cats = noEligibleCategories(plat);
+  if(!cats.length){
+    catSel.innerHTML = '<option value="">Sin categorías disponibles</option>';
+    if(submitBtn) submitBtn.disabled = true;
+    updateNoPricing();
+    return;
+  }
+  if(!noState.catId || !cats.some(c=>c.id===noState.catId)) noState.catId = cats[0].id;
+  catSel.innerHTML = cats.map(c=>`<option value="${c.id}" ${c.id===noState.catId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+  updateNoPricing();
+}
+function onNoPlatformChange(){
+  noState.platformId = document.getElementById('noPlatformSelect').value;
+  noState.catId = null;
+  renderNoCategories();
+}
+function onNoCategoryChange(){
+  noState.catId = document.getElementById('noCategorySelect').value;
+  updateNoPricing();
+}
+function onNoQtyChange(){ updateNoPricing(); }
+function updateNoPricing(){
+  const plat = getLS(LS.platforms, []).find(p=>p.id===noState.platformId);
+  const cat = currentNoCategory();
+  const qtyInput = document.getElementById('noQtyInput');
+  const qtyRaw = qtyInput ? qtyInput.value : '';
+  const qtyNum = Number(qtyRaw);
+  const qtyValid = qtyRaw!=='' && !isNaN(qtyNum) && qtyNum>=NO_MIN_QTY && qtyNum<=NO_MAX_QTY;
+  const warnEl = document.getElementById('noQtyWarn');
+  if(warnEl) warnEl.classList.toggle('hidden', qtyValid || qtyRaw==='');
+  const submitBtn = document.getElementById('noSubmitBtn');
+
+  if(!cat){
+    ['noPerKSaldo','noPerKTransfer','noTotalSaldo','noTotalTransfer'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
+    document.getElementById('noRateSaldoSub').textContent = '—';
+    document.getElementById('noRateTransferSub').textContent = '—';
+    document.getElementById('noSumService').textContent = '—';
+    document.getElementById('noSumPlatform').textContent = '—';
+    document.getElementById('noSumQty').textContent = '—';
+    if(submitBtn) submitBtn.disabled = true;
+    return;
+  }
+  const qtyForPreview = Math.min(NO_MAX_QTY, Math.max(NO_MIN_QTY, qtyValid ? qtyNum : NO_MIN_QTY));
+  const perK = noPriceForQty(cat, 1000);
+  const total = noPriceForQty(cat, qtyForPreview);
+  document.getElementById('noPerKSaldo').textContent = fmtCUP(perK.saldo);
+  document.getElementById('noPerKTransfer').textContent = fmtCUP(perK.transfer);
+  document.getElementById('noTotalSaldo').textContent = fmtCUP(total.saldo);
+  document.getElementById('noTotalTransfer').textContent = fmtCUP(total.transfer);
+  document.getElementById('noRateSaldoSub').textContent = fmtCUP(perK.saldo) + ' por cada 1,000';
+  document.getElementById('noRateTransferSub').textContent = fmtCUP(perK.transfer) + ' por cada 1,000';
+  document.getElementById('noSumService').textContent = cat.name;
+  document.getElementById('noSumPlatform').textContent = plat ? plat.name : '—';
+  document.getElementById('noSumQty').textContent = qtyForPreview.toLocaleString('es-CU') + ' Unidades';
+  if(submitBtn) submitBtn.disabled = !qtyValid;
+}
+function editNoDescription(){
+  const val = prompt('Descripción del pedido (opcional):', noState.desc || '');
+  if(val===null) return;
+  noState.desc = val.trim();
+  document.getElementById('noDescDisplay').textContent = (noState.desc ? noState.desc : 'Sin descripción') + ' ✏️';
+}
+/* Agrega el pedido de cantidad libre al mismo carrito de siempre, como una
+   línea "custom" — el resto del carrito (resolveCartLines, renderCartModal,
+   confirmPurchase…) no necesita saber que esta línea no viene de un
+   producto fijo del catálogo. */
+function addCustomOrderToCart(platId, catId, name, transfer, saldo){
+  const cart = getCart();
+  cart.push({ cartId: uid('CART'), platId, catId, qty:1, custom:{ name, transfer, saldo } });
+  setCart(cart);
+}
+function startCustomOrderCheckout(){
+  const plat = getLS(LS.platforms, []).find(p=>p.id===noState.platformId);
+  const cat = currentNoCategory();
+  const qtyInput = document.getElementById('noQtyInput');
+  const qty = qtyInput ? parseInt(qtyInput.value, 10) : NaN;
+  if(!plat || !cat){ showFloatAlert("Selecciona plataforma y categoría."); return; }
+  if(isNaN(qty) || qty<NO_MIN_QTY || qty>NO_MAX_QTY){
+    showFloatAlert(`La cantidad debe estar entre ${NO_MIN_QTY} y ${NO_MAX_QTY.toLocaleString("es-CU")} unidades.`);
+    return;
+  }
+  const total = noPriceForQty(cat, qty);
+  const name = qty.toLocaleString("es-CU") + " " + cat.name.toLowerCase() + (noState.desc ? " — " + noState.desc : "");
+  addCustomOrderToCart(plat.id, cat.id, name, total.transfer, total.saldo);
+  showFloatAlert("Pedido agregado 🛒", "ok");
+  openCartModal();
 }
 
 /* =========================================================================
@@ -3474,15 +3782,8 @@ function renderStickyCartBar(){
   if(!bar) return;
   const n = cartCount();
   if(n===0){ bar.classList.add('hidden'); return; }
-  const platforms = getLS(LS.platforms, []);
   let total = 0;
-  getCart().forEach(line=>{
-    const plat = platforms.find(p=>p.id===line.platId);
-    const cat = plat && plat.categories.find(c=>c.id===line.catId);
-    const prod = cat && cat.products.find(p=>p.id===line.prodId);
-    if(!prod) return;
-    total += computeEffectivePrice(prod).transfer * line.qty;
-  });
+  resolveCartLines().forEach(r=>{ total += r.eff.transfer * r.line.qty; });
   document.getElementById('stickyCartCount').textContent = n;
   document.getElementById('stickyCartTotal').textContent = '≈ ' + fmtCUP(total);
   bar.classList.remove('hidden');
@@ -3509,7 +3810,10 @@ function changeCartQty(cartId, delta){
   else setCart(cart);
   renderCartModal();
 }
-/* Resuelve cada línea del carrito contra el catálogo actual (por si un producto fue editado o eliminado) */
+/* Resuelve cada línea del carrito contra el catálogo actual (por si un producto fue editado o eliminado).
+   Las líneas "custom" (pedidos de cantidad libre desde Nuevo Pedido) no corresponden a un producto fijo
+   del catálogo, así que se resuelven con el precio ya calculado al agregarlas (mismo motor de precios de
+   siempre) envuelto en un producto sintético — así el resto del carrito no necesita saber la diferencia. */
 function resolveCartLines(){
   const platforms = getLS(LS.platforms, []);
   const cart = getCart();
@@ -3517,8 +3821,14 @@ function resolveCartLines(){
   cart.forEach(line=>{
     const plat = platforms.find(p=>p.id===line.platId);
     const cat = plat && plat.categories.find(c=>c.id===line.catId);
-    const prod = cat && cat.products.find(p=>p.id===line.prodId);
-    if(!plat || !cat || !prod || prod.stock===false) return;
+    if(!plat || !cat) return;
+    if(line.custom){
+      const prod = { id: 'CUSTOM-' + line.cartId, name: line.custom.name, stock:true };
+      resolved.push({ line, plat, cat, prod, eff:{ transfer: line.custom.transfer, saldo: line.custom.saldo, promo:null } });
+      return;
+    }
+    const prod = cat.products.find(p=>p.id===line.prodId);
+    if(!prod || prod.stock===false) return;
     resolved.push({ line, plat, cat, prod, eff: computeEffectivePrice(prod) });
   });
   const validIds = resolved.map(r=>r.line.cartId);
@@ -3594,7 +3904,12 @@ function confirmPurchase(){
     const unit = cartMethod==='Transferencia' ? r.eff.transfer : r.eff.saldo;
     const subtotal = unit * r.line.qty;
     total += subtotal;
-    return { name:r.prod.name, id:r.prod.id, qty:r.line.qty, unit, subtotal, promoTitle: r.eff.promo ? r.eff.promo.title : '' };
+    const item = { name:r.prod.name, id:r.prod.id, qty:r.line.qty, unit, subtotal, promoTitle: r.eff.promo ? r.eff.promo.title : '' };
+    // Pedidos de "Nuevo Pedido" (cantidad libre): se guardan los datos necesarios
+    // para poder repetir el pedido después, ya que no corresponden a un producto
+    // fijo del catálogo (ver resolveCartLines / repeatOrder).
+    if(r.line.custom) item.custom = { platId:r.plat.id, catId:r.cat.id, name:r.prod.name, transfer:r.line.custom.transfer, saldo:r.line.custom.saldo };
+    return item;
   });
   const tagPromoTitles = Array.from(new Set(items.filter(i=>i.promoTitle).map(i=>i.promoTitle)));
   const orderPromoTitle = tagPromoTitles.length ? tagPromoTitles.join(', ') : (linkPromo ? linkPromo.title : '');
@@ -3702,6 +4017,7 @@ function repeatOrder(orderId){
   if(!order || !order.items || !order.items.length){ showFloatAlert("No se pudo repetir este pedido."); return; }
   let added = 0;
   order.items.forEach(it=>{
+    if(it.custom){ addCustomOrderToCart(it.custom.platId, it.custom.catId, it.custom.name, it.custom.transfer, it.custom.saldo); added++; return; }
     const loc = locateProduct(it.id);
     if(loc && loc.prod.stock!==false){ addToCart(loc.plat.id, loc.cat.id, loc.prod.id, it.qty||1); added++; }
   });
