@@ -2526,12 +2526,57 @@ function getCategoryCreditRate(cat){
   const v = parseFloat(cat.creditsPerK);
   return (!isNaN(v) && v>=0) ? v : undefined;
 }
-/* Créditos automáticos de un producto = (cantidad / 1000) × créditos-por-1000 de su categoría.
-   Devuelve undefined si la categoría no tiene configuración o el producto no tiene cantidad. */
+/* ---------- Niveles de crédito por categoría (cat.creditTiers) ----------
+   Reemplaza al antiguo "créditos por cada 1,000" por una tabla libre de
+   niveles: cada nivel es {qty, credits} (ej: 100 u = 1 crédito, 200 u = 2.5,
+   500 u = 5.5, 1000 u = 10.5...). No tienen que ser proporcionales entre sí.
+   Para una cantidad exacta que coincide con un nivel, se usa ese valor tal
+   cual. Para cantidades intermedias, se interpola linealmente entre los dos
+   niveles más cercanos; por debajo del primer nivel o por encima del último,
+   se extrapola usando la proporción/pendiente del tramo más cercano. */
+function getCategoryCreditTiers(cat){
+  if(!cat || !Array.isArray(cat.creditTiers)) return undefined;
+  const valid = cat.creditTiers
+    .map(t=>({ qty: parseFloat(t.qty), credits: parseFloat(t.credits) }))
+    .filter(t=> !isNaN(t.qty) && t.qty>0 && !isNaN(t.credits) && t.credits>=0)
+    .sort((a,b)=>a.qty-b.qty);
+  return valid.length ? valid : undefined;
+}
+function interpolateCreditTiers(tiers, qty){
+  if(!tiers || !tiers.length) return undefined;
+  if(tiers.length===1) return (qty/tiers[0].qty) * tiers[0].credits;
+  if(qty<=tiers[0].qty) return (qty/tiers[0].qty) * tiers[0].credits;
+  const last = tiers[tiers.length-1];
+  if(qty>=last.qty){
+    const prev = tiers[tiers.length-2];
+    const rate = (last.credits-prev.credits)/(last.qty-prev.qty);
+    return last.credits + rate*(qty-last.qty);
+  }
+  for(let i=0;i<tiers.length-1;i++){
+    const a=tiers[i], b=tiers[i+1];
+    if(qty>=a.qty && qty<=b.qty){
+      const ratio = (qty-a.qty)/(b.qty-a.qty);
+      return a.credits + ratio*(b.credits-a.credits);
+    }
+  }
+  return undefined;
+}
+/* true si la categoría tiene algún sistema de créditos automáticos configurado
+   (niveles nuevos, o el antiguo créditos-por-1,000 en catálogos previos). */
+function categoryHasCreditConfig(cat){
+  return getCategoryCreditTiers(cat)!==undefined || getCategoryCreditRate(cat)!==undefined;
+}
+/* Créditos automáticos de un producto según su cantidad:
+   1) Si la categoría tiene niveles configurados (cat.creditTiers), se interpola entre ellos.
+   2) Si no, y tiene el antiguo créditos-por-1,000 (cat.creditsPerK), se usa esa proporción (retrocompatible).
+   Devuelve undefined si la categoría no tiene ninguna configuración o el producto no tiene cantidad. */
 function getAutoCredits(prod, cat){
-  const rate = getCategoryCreditRate(cat);
   const qty = parseFloat(prod && prod.qty);
-  if(rate===undefined || isNaN(qty) || qty<=0) return undefined;
+  if(isNaN(qty) || qty<=0) return undefined;
+  const tiers = getCategoryCreditTiers(cat);
+  if(tiers) return interpolateCreditTiers(tiers, qty);
+  const rate = getCategoryCreditRate(cat);
+  if(rate===undefined) return undefined;
   return (qty/1000) * rate;
 }
 /* Precio base de un producto. Orden de prioridad (compatible con datos antiguos):
@@ -2628,7 +2673,7 @@ function noInterpolate(points, key, qty){
 /* Precio (Transferencia y Saldo Móvil) de una categoría para CUALQUIER
    cantidad — reutilizando el sistema de precios actual, sin duplicar lógica. */
 function noPriceForQty(cat, qty){
-  if(getCategoryCreditRate(cat)!==undefined) return getBasePrice({ qty }, cat);
+  if(categoryHasCreditConfig(cat)) return getBasePrice({ qty }, cat);
   const pts = noCategoryPricePoints(cat);
   return { transfer: noInterpolate(pts,'transfer',qty), saldo: noInterpolate(pts,'saldo',qty) };
 }
@@ -4494,7 +4539,7 @@ function renderAdminGeneral(){
     </div>
     <div class="admin-card mirror">
       <h3>⚡ Créditos por categoría</h3>
-      <p style="color:var(--text-dim);font-size:.8rem;margin-bottom:12px;">Configura cuántos créditos consume cada categoría por cada 1,000 unidades. El sistema calculará automáticamente los créditos y el precio de cada producto según su cantidad — ya no hace falta escribir los créditos producto por producto. Esta lista se genera sola a partir de las plataformas y categorías que ya tienes en tu catálogo: si agregas una plataforma o categoría nueva, aparecerá aquí automáticamente.</p>
+      <p style="color:var(--text-dim);font-size:.8rem;margin-bottom:12px;">Define, para cada categoría, cuántos créditos consume cada cantidad de unidades. No tiene que ser proporcional — puedes poner, por ejemplo: 100 unidades = 1 crédito, 200 = 2.5, 500 = 5.5, 1000 = 10.5, etc. El sistema calcula solo el precio de cada producto según su cantidad (interpolando entre los niveles más cercanos si la cantidad no coincide exactamente) — ya no hace falta escribir los créditos producto por producto. Esta lista se genera sola a partir de las plataformas y categorías que ya tienes en tu catálogo.</p>
       <div id="categoryCreditsWrap"></div>
       <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveCategoryCreditsConfig()">💾 Guardar y recalcular todos los precios</button>
     </div>
@@ -4562,36 +4607,79 @@ function renderCategoryCreditsPanel(){
   let html = '';
   platforms.forEach(plat=>{
     if(!plat.categories.length) return;
-    html += `<div style="margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:10px;color:var(--gold-2);">${platformIconHtml(plat.icon,18)} ${escapeHtml(plat.name)}</div>
-      <div class="row2">`;
+    html += `<div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:10px;color:var(--gold-2);">${platformIconHtml(plat.icon,18)} ${escapeHtml(plat.name)}</div>`;
     plat.categories.forEach(cat=>{
-      const rate = getCategoryCreditRate(cat);
-      const inputId = 'catCredit__' + plat.id + '__' + cat.id;
-      html += `<div class="field">
-        <label>${escapeHtml(cat.name)} — créditos por cada 1,000 ${rate===undefined?'<span style="color:var(--text-dim);text-transform:none;">(sin configurar)</span>':''}</label>
-        <input id="${inputId}" data-plat="${plat.id}" data-cat="${cat.id}" type="number" step="any" min="0" placeholder="Sin configurar" value="${rate!==undefined?rate:''}">
+      const tiers = getCategoryCreditTiers(cat);
+      const rowsWrapId = 'tiersWrap__' + plat.id + '__' + cat.id;
+      const rowsData = (tiers && tiers.length) ? tiers : [{qty:'',credits:''}];
+      html += `<div class="admin-card" style="background:rgba(0,217,255,.03);margin-bottom:10px;">
+        <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(cat.name)}</div>
+        <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:10px;">Unidades → créditos que consume esa cantidad. Agrega tantos niveles como necesites.</div>
+        <div id="${rowsWrapId}" data-plat="${plat.id}" data-cat="${cat.id}">
+          ${rowsData.map((t,i)=>creditTierRowHtml(i,t)).join('')}
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="addCreditTierRow('${plat.id}','${cat.id}')">➕ Agregar nivel</button>
       </div>`;
     });
-    html += `</div></div>`;
+    html += `</div>`;
   });
   wrap.innerHTML = html || '<p style="color:var(--text-dim);font-size:.85rem;">Primero crea alguna categoría en el catálogo.</p>';
 }
+function creditTierRowHtml(idx, t){
+  const qtyVal = (t.qty!==''&&t.qty!==undefined&&t.qty!==null) ? t.qty : '';
+  const credVal = (t.credits!==''&&t.credits!==undefined&&t.credits!==null) ? t.credits : '';
+  return `<div class="row2 credit-tier-row" data-idx="${idx}" style="margin-bottom:6px;align-items:end;">
+    <div class="field" style="margin-bottom:0;"><label>Unidades</label><input type="number" step="any" min="0" class="tierQty" placeholder="Ej: 100" value="${qtyVal}"></div>
+    <div class="field" style="margin-bottom:0;display:flex;gap:6px;align-items:end;">
+      <div style="flex:1;"><label>Créditos</label><input type="number" step="any" min="0" class="tierCredits" placeholder="Ej: 1" value="${credVal}"></div>
+      <button type="button" class="btn btn-ghost btn-sm" title="Quitar nivel" onclick="removeCreditTierRow(this)">🗑</button>
+    </div>
+  </div>`;
+}
+function addCreditTierRow(platId, catId){
+  const wrapEl = document.getElementById('tiersWrap__' + platId + '__' + catId);
+  if(!wrapEl) return;
+  const idx = wrapEl.querySelectorAll('.credit-tier-row').length;
+  wrapEl.insertAdjacentHTML('beforeend', creditTierRowHtml(idx, {qty:'',credits:''}));
+}
+function removeCreditTierRow(btn){
+  const row = btn.closest('.credit-tier-row');
+  const wrapEl = row.parentElement;
+  if(wrapEl.querySelectorAll('.credit-tier-row').length<=1){
+    row.querySelector('.tierQty').value = '';
+    row.querySelector('.tierCredits').value = '';
+    return;
+  }
+  row.remove();
+}
 function saveCategoryCreditsConfig(){
   const platforms = getLS(LS.platforms, []);
-  const inputs = document.querySelectorAll('#categoryCreditsWrap input[data-plat]');
+  const wraps = document.querySelectorAll('#categoryCreditsWrap [id^="tiersWrap__"]');
   let hasInvalid = false;
-  inputs.forEach(inp=>{
-    const raw = inp.value;
-    const plat = platforms.find(p=>p.id===inp.dataset.plat);
-    const cat = plat && plat.categories.find(c=>c.id===inp.dataset.cat);
+  wraps.forEach(wrapEl=>{
+    const plat = platforms.find(p=>p.id===wrapEl.dataset.plat);
+    const cat = plat && plat.categories.find(c=>c.id===wrapEl.dataset.cat);
     if(!cat) return;
-    if(raw===''){ delete cat.creditsPerK; return; }
-    const val = parseFloat(raw);
-    if(isNaN(val) || val<0){ hasInvalid = true; return; }
-    cat.creditsPerK = val;
+    const tiers = [];
+    wrapEl.querySelectorAll('.credit-tier-row').forEach(row=>{
+      const qtyRaw = row.querySelector('.tierQty').value;
+      const credRaw = row.querySelector('.tierCredits').value;
+      if(qtyRaw==='' && credRaw==='') return; // fila vacía: se ignora
+      const qty = parseFloat(qtyRaw);
+      const credits = parseFloat(credRaw);
+      if(isNaN(qty) || qty<=0 || isNaN(credits) || credits<0){ hasInvalid = true; return; }
+      tiers.push({qty, credits});
+    });
+    if(tiers.length){
+      tiers.sort((a,b)=>a.qty-b.qty);
+      cat.creditTiers = tiers;
+      delete cat.creditsPerK;
+    } else {
+      delete cat.creditTiers;
+    }
   });
-  if(hasInvalid){ showFloatAlert("Los créditos por cada 1,000 no pueden ser negativos."); return; }
+  if(hasInvalid){ showFloatAlert("Revisa los niveles: las unidades deben ser mayores que 0 y los créditos no pueden ser negativos."); return; }
   setLS(LS.platforms, platforms);
   showFloatAlert("Créditos por categoría guardados — todos los precios se recalcularon", "ok");
   renderAdminGeneral();
@@ -5048,10 +5136,13 @@ function renderCatalogCategories(){
   const wrap = document.getElementById('catalogCatsWrap');
   if(!plat.categories.length){ wrap.innerHTML = '<div class="admin-card mirror">Sin categorías todavía.</div>'; return; }
   wrap.innerHTML = plat.categories.map(cat=>{
-    const rate = getCategoryCreditRate(cat);
-    const ratePill = rate!==undefined
-      ? `<span class="pill on">⚡ ${rate} créditos/1,000</span>`
-      : `<span class="pill off">Sin configurar créditos</span>`;
+    const catTiers = getCategoryCreditTiers(cat);
+    const legacyRate = getCategoryCreditRate(cat);
+    const ratePill = catTiers
+      ? `<span class="pill on">⚡ ${catTiers.length} nivel(es) de crédito</span>`
+      : (legacyRate!==undefined
+          ? `<span class="pill on">⚡ ${legacyRate} créditos/1,000</span>`
+          : `<span class="pill off">Sin configurar créditos</span>`);
     const active = isCategoryActive(cat);
     const statusPill = active
       ? `<span class="pill on">🟢 Visible para clientes</span>`
@@ -5168,8 +5259,7 @@ function openProductForm(catId, editProdId, duplicateData){
   const plat = platforms.find(p=>p.id===catalogState.platformId);
   const cat = plat.categories.find(c=>c.id===catId);
   const editing = editProdId ? cat.products.find(p=>p.id===editProdId) : (duplicateData || null);
-  const rate = getCategoryCreditRate(cat);
-  const autoMode = rate!==undefined;
+  const autoMode = categoryHasCreditConfig(cat);
   const box = document.getElementById('prodForm-'+catId);
   box.innerHTML = `
     <div class="admin-card" style="background:rgba(0,217,255,.04);margin-top:12px;">
@@ -5181,7 +5271,7 @@ function openProductForm(catId, editProdId, duplicateData){
       </div>
 
       ${autoMode ? `
-      <div class="credit-preview" style="margin-bottom:14px;">⚡ Esta categoría tiene configurado <b>${rate}</b> crédito(s) por cada 1,000. Los créditos y el precio de este producto se calculan automáticamente según la cantidad — no hace falta escribirlos a mano.</div>
+      <div class="credit-preview" style="margin-bottom:14px;">⚡ Esta categoría tiene créditos configurados por cantidad. Los créditos y el precio de este producto se calculan automáticamente — no hace falta escribirlos a mano.</div>
       ` : `
       <div class="field"><label>💳 Créditos que consume este servicio (opcional)</label>
         <input id="pfCredits" type="number" step="any" placeholder="Ej: 2.5" value="${editing&&editing.credits?editing.credits:''}" oninput="updateCreditPreview()">
@@ -5213,11 +5303,11 @@ function openProductForm(catId, editProdId, duplicateData){
       </div>
     </div>`;
   window.__pfAutoMode = autoMode;
-  window.__pfCategoryRate = rate;
+  window.__pfCategory = cat;
   updateCreditPreview();
 }
 /* Vista previa en vivo: recalcula el precio en pantalla mientras el admin escribe la cantidad
-   (si la categoría tiene créditos por 1,000 configurados) o los créditos manuales */
+   (si la categoría tiene créditos configurados por niveles/cantidad) o los créditos manuales */
 function updateCreditPreview(){
   const el = document.getElementById('creditPricePreview');
   if(!el) return;
@@ -5227,8 +5317,7 @@ function updateCreditPreview(){
   if(window.__pfAutoMode){
     const qtyInput = document.getElementById('pfQty');
     const qty = qtyInput ? parseFloat(qtyInput.value) : NaN;
-    const rate = window.__pfCategoryRate;
-    credits = (!isNaN(qty) && qty>0 && rate!==undefined) ? (qty/1000)*rate : undefined;
+    credits = (!isNaN(qty) && qty>0) ? getAutoCredits({qty}, window.__pfCategory) : undefined;
   } else {
     const input = document.getElementById('pfCredits');
     const manual = input ? parseFloat(input.value) : NaN;
@@ -5325,13 +5414,13 @@ function openRangeGeneratorForm(catId){
   const plat = platforms.find(p=>p.id===catalogState.platformId);
   const cat = plat.categories.find(c=>c.id===catId);
   const box = document.getElementById('rangeForm-'+catId);
-  const rate = getCategoryCreditRate(cat);
+  const hasCreditConfig = categoryHasCreditConfig(cat);
   const templateOptions = `<option value="">— Sin plantilla (usar valores por defecto) —</option>` +
     cat.products.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   box.innerHTML = `
     <div class="admin-card" style="background:rgba(0,217,255,.04);margin-top:12px;">
       <h3>🎯 Generador de ofertas por rango</h3>
-      ${rate===undefined ? `<div class="credit-preview">⚠ Esta categoría todavía no tiene configurados créditos por 1,000 — las ofertas se crearán igual, pero su precio quedará en $0 hasta que configures los créditos aquí en 📦 Catálogo.</div>` : `<div class="credit-preview">⚡ Esta categoría usa <b>${rate}</b> crédito(s) por cada 1,000. El precio de cada oferta generada se calculará solo, igual que el resto del catálogo.</div>`}
+      ${!hasCreditConfig ? `<div class="credit-preview">⚠ Esta categoría todavía no tiene configurados créditos — las ofertas se crearán igual, pero su precio quedará en $0 hasta que configures los créditos aquí en 📦 Catálogo.</div>` : `<div class="credit-preview">⚡ Esta categoría tiene créditos configurados por cantidad. El precio de cada oferta generada se calculará solo, igual que el resto del catálogo.</div>`}
       <div class="field"><label>Producto plantilla (opcional)</label>
         <select id="rgTemplate-${catId}" onchange="updateRangeTemplatePrefill('${catId}')">${templateOptions}</select>
       </div>
