@@ -677,49 +677,200 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
 /* ---- Oculta el catálogo antiguo de tarjetas (sigue funcionando por dentro, solo no se muestra) ---- */
 .legacy-hidden{display:none !important;}
 
-/* ---- Nuevo Pedido: formulario único que reemplaza el listado de ofertas ---- */
-.new-order-card{padding:20px;margin-bottom:28px;}
-@media(min-width:640px){ .new-order-card{padding:28px;} }
-.no-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:22px;}
-.no-icon{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 0 18px rgba(0,217,255,.3);}
-.no-header h2{font-size:1.2rem;margin:0 0 2px;}
-.no-header p{margin:0;color:var(--text-dim);font-size:.82rem;}
-.no-section{border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;background:rgba(255,255,255,.015);}
-.no-section-title{font-weight:700;color:var(--blue-2);font-size:.95rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.no-label{display:block;font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;margin-top:14px;}
+/* =========================================================
+   NUEVO PEDIDO — Rediseño Glassmorphism Premium
+   ========================================================= */
+.new-order-card{
+  padding:0;margin-bottom:32px;
+  background:linear-gradient(145deg,rgba(8,14,32,.94) 0%,rgba(5,10,22,.97) 50%,rgba(10,16,36,.94) 100%);
+  border:1px solid rgba(0,217,255,.16);border-radius:24px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 0 0 1px rgba(0,217,255,.05) inset,0 8px 48px rgba(0,0,0,.55),0 0 80px rgba(0,217,255,.04);
+  overflow:hidden;position:relative;
+}
+.new-order-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(0,217,255,.55) 30%,rgba(168,85,247,.45) 60%,transparent 100%);
+  z-index:1;
+}
+.new-order-card::after{
+  content:"";position:absolute;top:-100px;right:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,217,255,.06) 0%,transparent 70%);pointer-events:none;z-index:0;
+}
+.no-header{
+  display:flex;align-items:center;gap:16px;
+  padding:26px 24px 0;position:relative;z-index:1;margin-bottom:20px;
+}
+@media(max-width:640px){.no-header{padding:18px 16px 0;gap:12px;}}
+.no-icon{
+  width:56px;height:56px;flex-shrink:0;border-radius:16px;
+  background:linear-gradient(135deg,rgba(0,217,255,.15) 0%,rgba(168,85,247,.12) 100%);
+  border:1px solid rgba(0,217,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:1.45rem;
+  box-shadow:0 0 24px rgba(0,217,255,.18),inset 0 1px 0 rgba(255,255,255,.1);
+  position:relative;
+}
+.no-icon::after{content:"";position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 50%);}
+.no-header h2{
+  font-size:1.28rem;margin:0 0 3px;
+  background:linear-gradient(90deg,#e8f0ff,rgba(0,217,255,.9));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-weight:800;letter-spacing:-.3px;
+}
+.no-header p{margin:0;color:rgba(142,160,196,.75);font-size:.82rem;}
+.no-section{
+  margin:0 16px 14px;border:1px solid rgba(0,217,255,.09);border-radius:16px;
+  padding:18px;background:linear-gradient(145deg,rgba(255,255,255,.025) 0%,rgba(0,217,255,.015) 100%);
+  position:relative;overflow:hidden;
+}
+@media(max-width:640px){.no-section{margin:0 10px 12px;padding:14px;border-radius:14px;}}
+.no-section::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,217,255,.18),transparent);
+}
+.no-section-title{
+  font-weight:700;font-size:.8rem;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+  color:rgba(0,217,255,.8);text-transform:uppercase;letter-spacing:.8px;
+}
+.no-label{
+  display:block;font-size:.67rem;color:rgba(142,160,196,.65);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;margin-top:14px;font-weight:700;
+}
 .no-label:first-child{margin-top:0;}
 .no-label .req{color:var(--danger);}
-.no-select{width:100%;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:.92rem;font-family:inherit;}
-.no-select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,217,255,.15);}
+.no-select{
+  width:100%;padding:12px 36px 12px 13px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(0,217,255,.14);
+  border-radius:11px;color:var(--text);font-size:.91rem;font-family:inherit;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d9ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  transition:border-color .2s,box-shadow .2s;
+}
+.no-select:focus{outline:none;border-color:rgba(0,217,255,.45);box-shadow:0 0 0 3px rgba(0,217,255,.09),0 0 16px rgba(0,217,255,.08);}
 .no-row{display:grid;grid-template-columns:1fr;gap:16px;margin-top:4px;}
-@media(min-width:760px){ .no-row{grid-template-columns:1fr 1fr;} }
+@media(min-width:760px){.no-row{grid-template-columns:1fr 1fr;}}
 .no-qty-input-wrap{position:relative;}
-.no-qty-input{width:100%;padding:12px 78px 12px 13px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:1rem;font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;}
-.no-qty-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,217,255,.15);}
-.no-qty-unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--text-dim);background:rgba(255,255,255,.05);padding:4px 8px;border-radius:6px;}
-.no-minmax{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-dim);margin-top:6px;}
+.no-qty-input{
+  width:100%;padding:13px 88px 13px 13px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(0,217,255,.14);
+  border-radius:11px;color:var(--text);font-size:1.05rem;
+  font-family:ui-monospace,'SF Mono',Consolas,monospace;font-weight:700;
+  transition:border-color .2s,box-shadow .2s;
+}
+.no-qty-input:focus{outline:none;border-color:rgba(0,217,255,.45);box-shadow:0 0 0 3px rgba(0,217,255,.09),0 0 16px rgba(0,217,255,.07);}
+.no-qty-unit{
+  position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;padding:0 13px;
+  font-size:.66rem;color:rgba(0,217,255,.7);background:rgba(0,217,255,.06);
+  border-left:1px solid rgba(0,217,255,.12);border-radius:0 11px 11px 0;
+  font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+}
+.no-minmax{display:flex;justify-content:space-between;font-size:.67rem;color:rgba(142,160,196,.5);margin-top:6px;}
 .no-qty-warn{font-size:.72rem;color:var(--danger);margin-top:6px;}
-.no-price-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.no-price-card{border-radius:12px;padding:12px;text-align:center;border:1px solid var(--line);background:rgba(255,255,255,.02);}
-.no-price-card-head{font-size:.72rem;color:var(--text-dim);margin-bottom:6px;}
-.no-price-card-value{font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;font-weight:700;font-size:1.05rem;color:var(--gold-2);}
-.no-price-card-sub{font-size:.65rem;color:var(--text-dim);margin-top:2px;}
-.no-price-saldo{border-color:rgba(0,217,255,.35);}
-.no-price-transfer{border-color:rgba(255,204,51,.35);}
-.no-info-note{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:12px 14px;border-radius:10px;background:rgba(0,217,255,.06);border:1px solid rgba(0,217,255,.2);font-size:.8rem;color:var(--text-dim);}
+/* Precio TOTAL — nueva etiqueta dinámica */
+.no-price-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.no-price-section-label{font-size:.66rem;color:rgba(142,160,196,.6);text-transform:uppercase;letter-spacing:.6px;font-weight:700;}
+.no-price-qty-tag{
+  font-size:.62rem;background:rgba(0,217,255,.08);color:var(--blue-2);
+  border:1px solid rgba(0,217,255,.18);border-radius:999px;padding:2px 8px;font-weight:700;
+}
+.no-price-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.no-price-card{
+  border-radius:13px;padding:13px 11px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.no-price-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;opacity:.65;}
+.no-price-card-head{
+  font-size:.67rem;color:rgba(142,160,196,.65);margin-bottom:7px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  font-weight:600;text-transform:uppercase;letter-spacing:.4px;
+}
+.no-price-card-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-weight:800;font-size:1.25rem;line-height:1;}
+.no-price-card-sub{font-size:.6rem;color:rgba(142,160,196,.45);margin-top:5px;font-weight:500;}
+.no-price-saldo{
+  background:linear-gradient(145deg,rgba(0,217,255,.08),rgba(0,217,255,.03));
+  border:1px solid rgba(0,217,255,.22);box-shadow:0 4px 16px rgba(0,217,255,.07),inset 0 0 16px rgba(0,217,255,.02);
+}
+.no-price-saldo::before{background:linear-gradient(90deg,transparent,rgba(0,217,255,.45),transparent);}
+.no-price-saldo .no-price-card-value{color:#5be0ff;}
+.no-price-transfer{
+  background:linear-gradient(145deg,rgba(168,85,247,.08),rgba(168,85,247,.03));
+  border:1px solid rgba(168,85,247,.25);box-shadow:0 4px 16px rgba(168,85,247,.07),inset 0 0 16px rgba(168,85,247,.02);
+}
+.no-price-transfer::before{background:linear-gradient(90deg,transparent,rgba(168,85,247,.45),transparent);}
+.no-price-transfer .no-price-card-value{color:#c084fc;}
+.no-info-note{
+  display:flex;align-items:flex-start;gap:10px;margin-top:15px;
+  padding:10px 13px;border-radius:10px;
+  background:rgba(0,217,255,.04);border:1px solid rgba(0,217,255,.13);
+  font-size:.76rem;color:rgba(142,160,196,.7);
+}
 .no-info-note b{color:var(--blue-2);}
-.no-summary-row{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;padding:7px 0;border-bottom:1px dashed var(--line);color:var(--text-dim);}
+/* Descripción automática del servicio */
+.no-service-desc{
+  margin-top:13px;padding:12px 13px 12px 18px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(0,217,255,.04),rgba(168,85,247,.03));
+  border:1px solid rgba(0,217,255,.1);
+  font-size:.8rem;color:rgba(199,214,240,.7);line-height:1.6;
+  display:none;position:relative;overflow:hidden;
+}
+.no-service-desc::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--blue),rgba(168,85,247,.6));border-radius:2px 0 0 2px;
+}
+.no-service-desc.visible{display:block;}
+/* Resumen */
+.no-summary-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.83rem;padding:7px 0;border-bottom:1px solid rgba(120,170,255,.05);color:rgba(142,160,196,.65);
+}
 .no-summary-row:last-of-type{border-bottom:none;}
 .no-summary-row span:last-child{color:var(--text);font-weight:600;}
-.no-total-box{display:flex;justify-content:space-between;align-items:center;border-radius:12px;padding:14px 16px;margin-top:14px;border:1px solid var(--line);}
-.no-total-box b{font-size:.85rem;}
-.no-total-sub{font-size:.7rem;color:var(--text-dim);margin-top:2px;}
-.no-total-saldo{background:rgba(0,217,255,.06);border-color:rgba(0,217,255,.3);}
-.no-total-transfer{background:rgba(255,204,51,.06);border-color:rgba(255,204,51,.3);margin-bottom:0;}
-.no-total-value{font-family:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace,monospace;font-weight:700;font-size:1.15rem;color:var(--gold-2);}
-.no-desc-row{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--text-dim);margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
-.no-desc-row span:last-child{cursor:pointer;color:var(--blue-2);}
-.no-submit-btn{width:100%;padding:16px;font-size:1rem;margin-top:6px;}
+/* Cajas precio por 1K — pequeñas y elegantes */
+.no-perk-label{font-size:.66rem;color:rgba(142,160,196,.55);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin:14px 0 8px;}
+.no-perk-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.no-perk-box{border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;}
+.no-perk-box-icon{font-size:.9rem;flex-shrink:0;}
+.no-perk-box-label{font-size:.62rem;color:rgba(142,160,196,.55);text-transform:uppercase;letter-spacing:.5px;font-weight:700;line-height:1.2;}
+.no-perk-box-val{font-size:.85rem;font-weight:800;font-family:ui-monospace,'SF Mono',Consolas,monospace;margin-top:1px;}
+.no-perk-saldo{background:rgba(0,217,255,.05);border:1px solid rgba(0,217,255,.13);}
+.no-perk-saldo .no-perk-box-val{color:#5be0ff;}
+.no-perk-transfer{background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.18);}
+.no-perk-transfer .no-perk-box-val{color:#c084fc;}
+/* Compat: total boxes (ocultos, solo para compat JS) */
+.no-total-box{display:none;}
+.no-total-value{display:none;}
+.no-total-sub{display:none;}
+/* Descripción editable */
+.no-desc-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.82rem;padding:7px 0;color:rgba(142,160,196,.55);cursor:pointer;
+}
+.no-desc-row span:last-child{color:var(--blue-2);font-weight:500;}
+/* Botón submit */
+.no-submit-btn{
+  display:block;width:calc(100% - 32px);margin:2px 16px 20px;padding:16px;
+  font-size:.92rem;letter-spacing:1.5px;border-radius:14px;
+  background:linear-gradient(90deg,#0071c4,#00c4f0 35%,#9333ea 75%,#7c3aed);
+  background-size:200% 100%;color:#fff;font-weight:800;
+  text-shadow:0 1px 4px rgba(0,0,0,.25);border:none;cursor:pointer;
+  box-shadow:0 0 28px rgba(0,217,255,.22),0 0 56px rgba(168,85,247,.08),0 4px 18px rgba(0,0,0,.28);
+  transition:transform .18s,box-shadow .2s,background-position .4s;position:relative;overflow:hidden;
+}
+.no-submit-btn::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,transparent 50%);
+  border-radius:14px;pointer-events:none;
+}
+.no-submit-btn:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 0 40px rgba(0,217,255,.38),0 0 70px rgba(168,85,247,.13),0 6px 28px rgba(0,0,0,.32);
+  background-position:100% 0;
+}
+.no-submit-btn:active:not(:disabled){transform:translateY(0) scale(.98);}
+.no-submit-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+@media(max-width:640px){.no-submit-btn{width:calc(100% - 20px);margin:2px 10px 16px;padding:14px;}}
 </style>
 </head>
 
@@ -831,7 +982,7 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
          siguen existiendo tal cual en los datos (carrito, pedidos, créditos,
          promociones y panel administrativo no se tocan); esto solo cambia
          cómo el cliente los ve y compra. ===== -->
-    <div class="card mirror new-order-card">
+    <div class="new-order-card">
       <div class="no-header">
         <div class="no-icon">🛒</div>
         <div>
@@ -840,37 +991,49 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
         </div>
       </div>
 
+      <!-- Sección 1: Información del pedido -->
       <div class="no-section">
-        <div class="no-section-title">🧺 1. Información del pedido</div>
+        <div class="no-section-title">⚡ 1. Información del pedido</div>
 
-        <label class="no-label">Plataformas <span class="req">*</span></label>
-        <select id="noPlatformSelect" class="no-select" onchange="onNoPlatformChange()"></select>
+        <div class="no-row" style="margin-top:0;">
+          <div>
+            <label class="no-label" style="margin-top:0;">Plataforma <span class="req">*</span></label>
+            <select id="noPlatformSelect" class="no-select" onchange="onNoPlatformChange()"></select>
+          </div>
+          <div>
+            <label class="no-label" style="margin-top:0;">Categoría <span class="req">*</span></label>
+            <select id="noCategorySelect" class="no-select" onchange="onNoCategoryChange()"></select>
+          </div>
+        </div>
 
-        <label class="no-label">Seleccionar Categoría <span class="req">*</span></label>
-        <select id="noCategorySelect" class="no-select" onchange="onNoCategoryChange()"></select>
+        <!-- Descripción dinámica del servicio -->
+        <div id="noServiceDesc" class="no-service-desc"></div>
 
         <div class="no-row">
           <div>
             <label class="no-label">Cantidad <span class="req">*</span></label>
             <div class="no-qty-input-wrap">
-              <input type="number" id="noQtyInput" class="no-qty-input" inputmode="numeric" min="100" max="50000" step="1" value="100" oninput="onNoQtyChange()">
+              <input type="number" id="noQtyInput" class="no-qty-input" inputmode="numeric" min="100" max="50000" step="1" value="1000" oninput="onNoQtyChange()">
               <span class="no-qty-unit">Unidades</span>
             </div>
             <div class="no-minmax"><span>Mínimo: 100</span><span>Máximo: 50,000</span></div>
             <div id="noQtyWarn" class="no-qty-warn hidden">La cantidad debe estar entre 100 y 50,000.</div>
           </div>
           <div>
-            <label class="no-label">Precio por 1K (Ambos métodos)</label>
+            <div class="no-price-header">
+              <span class="no-price-section-label">Precio Total</span>
+              <span class="no-price-qty-tag" id="noPriceQtyTag">por cantidad</span>
+            </div>
             <div class="no-price-cards">
               <div class="no-price-card no-price-saldo">
                 <div class="no-price-card-head">📱 Saldo Móvil</div>
                 <div class="no-price-card-value" id="noPerKSaldo">—</div>
-                <div class="no-price-card-sub">por cada 1,000</div>
+                <div class="no-price-card-sub" id="noPerKSaldoSub">total</div>
               </div>
               <div class="no-price-card no-price-transfer">
                 <div class="no-price-card-head">🏦 Transferencia</div>
                 <div class="no-price-card-value" id="noPerKTransfer">—</div>
-                <div class="no-price-card-sub">por cada 1,000</div>
+                <div class="no-price-card-sub" id="noPerKTransferSub">total</div>
               </div>
             </div>
           </div>
@@ -879,30 +1042,45 @@ td.actions{display:flex;gap:6px;flex-wrap:wrap;}
         <div class="no-info-note"><span>ℹ️</span><span>La cantidad mínima por pedido es <b>100</b> unidades y la máxima es <b>50,000</b> unidades.</span></div>
       </div>
 
+      <!-- Sección 2: Resumen del pedido -->
       <div class="no-section">
-        <div class="no-section-title">📄 2. Resumen del pedido</div>
+        <div class="no-section-title">📋 2. Resumen del pedido</div>
         <div class="no-summary-row"><span>Servicio seleccionado:</span><span id="noSumService">—</span></div>
         <div class="no-summary-row"><span>Plataforma:</span><span id="noSumPlatform">—</span></div>
         <div class="no-summary-row"><span>Cantidad solicitada:</span><span id="noSumQty">—</span></div>
         <div class="no-summary-row"><span>Cantidad mínima:</span><span>100</span></div>
         <div class="no-summary-row"><span>Cantidad máxima:</span><span>50,000</span></div>
 
-        <div class="no-total-box no-total-saldo">
-          <div><b>Total con Saldo Móvil:</b><div class="no-total-sub" id="noRateSaldoSub">—</div></div>
-          <div class="no-total-value" id="noTotalSaldo">—</div>
-        </div>
-        <div class="no-total-box no-total-transfer">
-          <div><b>Total con Transferencia:</b><div class="no-total-sub" id="noRateTransferSub">—</div></div>
-          <div class="no-total-value" id="noTotalTransfer">—</div>
+        <!-- Precio por 1K — pequeño y elegante -->
+        <div class="no-perk-label">Precio por cada 1,000 unidades</div>
+        <div class="no-perk-grid">
+          <div class="no-perk-box no-perk-saldo">
+            <span class="no-perk-box-icon">📱</span>
+            <div>
+              <div class="no-perk-box-label">Saldo Móvil</div>
+              <div class="no-perk-box-val" id="noTotalSaldo">—</div>
+            </div>
+          </div>
+          <div class="no-perk-box no-perk-transfer">
+            <span class="no-perk-box-icon">🏦</span>
+            <div>
+              <div class="no-perk-box-label">Transferencia</div>
+              <div class="no-perk-box-val" id="noTotalTransfer">—</div>
+            </div>
+          </div>
         </div>
 
-        <div class="no-desc-row">
-          <span>Descripción:</span>
-          <span id="noDescDisplay" onclick="editNoDescription()">Sin descripción ✏️</span>
+        <!-- Hidden compat elements for JS -->
+        <div id="noRateSaldoSub" style="display:none;"></div>
+        <div id="noRateTransferSub" style="display:none;"></div>
+
+        <div class="no-desc-row" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(120,170,255,.05);">
+          <span>Descripción (opcional):</span>
+          <span id="noDescDisplay" onclick="editNoDescription()">Agregar ✏️</span>
         </div>
       </div>
 
-      <button class="btn btn-primary no-submit-btn" id="noSubmitBtn" onclick="startCustomOrderCheckout()">🛍️ Realizar Pedido</button>
+      <button class="btn no-submit-btn" id="noSubmitBtn" onclick="startCustomOrderCheckout()">🚀 REALIZAR PEDIDO</button>
     </div>
 
     <!-- ===== Catálogo antiguo de tarjetas: se mantiene 100% funcional por
@@ -2503,6 +2681,40 @@ function onNoCategoryChange(){
   updateNoPricing();
 }
 function onNoQtyChange(){ updateNoPricing(); }
+/* =========================================================
+   Descripciones dinámicas por plataforma+categoría
+   ========================================================= */
+const NO_SERVICE_DESCRIPTIONS = {
+  'Instagram_Seguidores': '📸 Aumenta tu audiencia en Instagram con seguidores reales y graduales. Perfecto para crecer tu perfil de forma orgánica y segura. La entrega es progresiva para proteger tu cuenta.',
+  'Instagram_Likes': '❤️ Impulsa el alcance de tus publicaciones con likes auténticos. Más interacciones significan mayor visibilidad en el feed y el explorador de Instagram.',
+  'Instagram_Vistas': '▶️ Incrementa las reproducciones de tus Reels y videos. Las vistas ayudan a posicionar tu contenido y aumentar el engagement de tu cuenta.',
+  'Instagram_Comentarios': '💬 Genera actividad real en tus publicaciones con comentarios que impulsan tu posicionamiento en el algoritmo de Instagram.',
+  'TikTok_Seguidores': '🎵 Crece en TikTok con seguidores que aumentan tu credibilidad. Un mayor número de seguidores te ayuda a acceder al programa de creadores y monetización.',
+  'TikTok_Likes': '🔥 Consigue más me gusta en tus videos de TikTok para llegar a la página Para Ti y ganar mayor exposición viral.',
+  'TikTok_Vistas': '👁️ Multiplica las reproducciones de tus videos en TikTok. Las vistas son clave para que el algoritmo distribuya tu contenido a más usuarios.',
+  'TikTok_Comentarios': '💬 Activa el engagement de tus videos con comentarios que potencian tu visibilidad en TikTok.',
+  'Facebook_Seguidores': '👥 Construye una comunidad sólida en Facebook. Más seguidores dan credibilidad a tu página y aumentan el alcance orgánico de tu contenido.',
+  'Facebook_Likes': '👍 Consigue más me gusta en tus publicaciones y página de Facebook para aumentar tu presencia y confianza digital.',
+  'Facebook_Vistas': '📹 Aumenta las reproducciones de tus videos en Facebook para mejorar su posicionamiento y alcance orgánico.',
+  'YouTube_Suscriptores': '🔴 Crece en YouTube con suscriptores reales. Alcanza los umbrales del programa de monetización más rápido con una audiencia activa.',
+  'YouTube_Vistas': '▶️ Incrementa las vistas de tus videos en YouTube. Más reproducciones mejoran el ranking en búsquedas y recomendaciones.',
+  'YouTube_Likes': '👍 Potencia el engagement de tus videos con likes que mejoran su posicionamiento en el algoritmo de YouTube.',
+  'Twitter_Seguidores': '🐦 Aumenta tu influencia en X (Twitter) con seguidores que refuerzan tu autoridad en la plataforma.',
+  'Twitter_Likes': '❤️ Consigue más me gusta en tus tweets para aumentar su visibilidad y alcance orgánico en X (Twitter).',
+};
+
+function getNoServiceDescription(platName, catName){
+  const key = platName + '_' + catName;
+  if(NO_SERVICE_DESCRIPTIONS[key]) return NO_SERVICE_DESCRIPTIONS[key];
+  // Búsqueda parcial por categoría
+  const catKey = Object.keys(NO_SERVICE_DESCRIPTIONS).find(k => k.endsWith('_' + catName));
+  if(catKey) return NO_SERVICE_DESCRIPTIONS[catKey];
+  // Descripción genérica
+  const icons = { Seguidores:'👥', Likes:'❤️', Vistas:'▶️', Comentarios:'💬', Suscriptores:'🔔' };
+  const icon = Object.keys(icons).find(k => catName.includes(k));
+  return `${icon ? icons[icon] : '⚡'} Servicio de ${catName} para ${platName}. Entrega gradual y segura para proteger tu cuenta. Resultados garantizados con soporte directo por WhatsApp.`;
+}
+
 function updateNoPricing(){
   const plat = getLS(LS.platforms, []).find(p=>p.id===noState.platformId);
   const cat = currentNoCategory();
@@ -2514,25 +2726,60 @@ function updateNoPricing(){
   if(warnEl) warnEl.classList.toggle('hidden', qtyValid || qtyRaw==='');
   const submitBtn = document.getElementById('noSubmitBtn');
 
+  // Descripción dinámica
+  const descEl = document.getElementById('noServiceDesc');
+  if(cat && plat && descEl){
+    descEl.textContent = getNoServiceDescription(plat.name, cat.name);
+    descEl.classList.add('visible');
+  } else if(descEl){
+    descEl.classList.remove('visible');
+  }
+
   if(!cat){
     ['noPerKSaldo','noPerKTransfer','noTotalSaldo','noTotalTransfer'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
-    document.getElementById('noRateSaldoSub').textContent = '—';
-    document.getElementById('noRateTransferSub').textContent = '—';
+    const rateSaldoSub = document.getElementById('noRateSaldoSub');
+    const rateTransferSub = document.getElementById('noRateTransferSub');
+    if(rateSaldoSub) rateSaldoSub.textContent = '—';
+    if(rateTransferSub) rateTransferSub.textContent = '—';
     document.getElementById('noSumService').textContent = '—';
     document.getElementById('noSumPlatform').textContent = '—';
     document.getElementById('noSumQty').textContent = '—';
+    const qtyTagEl = document.getElementById('noPriceQtyTag');
+    if(qtyTagEl) qtyTagEl.textContent = 'por cantidad';
     if(submitBtn) submitBtn.disabled = true;
     return;
   }
   const qtyForPreview = Math.min(NO_MAX_QTY, Math.max(NO_MIN_QTY, qtyValid ? qtyNum : NO_MIN_QTY));
   const perK = noPriceForQty(cat, 1000);
   const total = noPriceForQty(cat, qtyForPreview);
-  document.getElementById('noPerKSaldo').textContent = fmtCUP(perK.saldo);
-  document.getElementById('noPerKTransfer').textContent = fmtCUP(perK.transfer);
-  document.getElementById('noTotalSaldo').textContent = fmtCUP(total.saldo);
-  document.getElementById('noTotalTransfer').textContent = fmtCUP(total.transfer);
-  document.getElementById('noRateSaldoSub').textContent = fmtCUP(perK.saldo) + ' por cada 1,000';
-  document.getElementById('noRateTransferSub').textContent = fmtCUP(perK.transfer) + ' por cada 1,000';
+
+  // PRECIO TOTAL en las cards grandes (no por 1K)
+  const perKSaldoEl = document.getElementById('noPerKSaldo');
+  const perKTransferEl = document.getElementById('noPerKTransfer');
+  const perKSaldoSubEl = document.getElementById('noPerKSaldoSub');
+  const perKTransferSubEl = document.getElementById('noPerKTransferSub');
+  if(perKSaldoEl) perKSaldoEl.textContent = fmtCUP(total.saldo);
+  if(perKTransferEl) perKTransferEl.textContent = fmtCUP(total.transfer);
+  const qtyLabel = qtyForPreview.toLocaleString('es-CU') + ' unidades';
+  if(perKSaldoSubEl) perKSaldoSubEl.textContent = 'por ' + qtyLabel;
+  if(perKTransferSubEl) perKTransferSubEl.textContent = 'por ' + qtyLabel;
+
+  // Tag dinámico con cantidad
+  const qtyTagEl = document.getElementById('noPriceQtyTag');
+  if(qtyTagEl) qtyTagEl.textContent = 'por ' + qtyForPreview.toLocaleString('es-CU') + ' u.';
+
+  // En el resumen: precio POR 1K (pequeño)
+  const totalSaldoEl = document.getElementById('noTotalSaldo');
+  const totalTransferEl = document.getElementById('noTotalTransfer');
+  if(totalSaldoEl) totalSaldoEl.textContent = fmtCUP(perK.saldo);
+  if(totalTransferEl) totalTransferEl.textContent = fmtCUP(perK.transfer);
+
+  // Compat hidden elements
+  const rateSaldoSub = document.getElementById('noRateSaldoSub');
+  const rateTransferSub = document.getElementById('noRateTransferSub');
+  if(rateSaldoSub) rateSaldoSub.textContent = fmtCUP(perK.saldo) + ' por cada 1,000';
+  if(rateTransferSub) rateTransferSub.textContent = fmtCUP(perK.transfer) + ' por cada 1,000';
+
   document.getElementById('noSumService').textContent = cat.name;
   document.getElementById('noSumPlatform').textContent = plat ? plat.name : '—';
   document.getElementById('noSumQty').textContent = qtyForPreview.toLocaleString('es-CU') + ' Unidades';
